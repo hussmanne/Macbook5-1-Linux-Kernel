@@ -30,6 +30,9 @@ cp .config "$out/resolved.config"
 export PACMAN_PKGBASE=linux-mbp51-extreme
 export PACMAN_EXTRAPACKAGES=headers
 export MAKEPKGOPTS="--nodeps --noconfirm"
+# Scheduler tuning only; -mtune=core2 does NOT enable newer CPU instructions
+# or change the x86-64 baseline. Never use -march=native on GitHub runners.
+export KCFLAGS="-mtune=core2"
 make -j"$(nproc)" pacman-pkg
 while IFS= read -r -d '' pkg; do cp "$pkg" "$out/"; done \
   < <(find "$src" -name '*.pkg.tar.zst' -type f -print0)
@@ -44,6 +47,7 @@ release=$(< include/config/kernel.release)
 printf '%s\n' "$release" > "$out/kernelrelease.txt"
 printf 'source_commit=%s\nkernel_release=%s\nsource_archive_sha256=%s\n' \
   "$SOURCE_SHA" "$release" "$archive_sha256" > "$out/build-manifest.txt"
+printf 'kernel_tuning_flags=%s\n' "$KCFLAGS" >> "$out/build-manifest.txt"
 gcc --version | head -n 1 >> "$out/build-manifest.txt"
 
 # Ensure that headers and bootable image use exactly the same module ABI path.

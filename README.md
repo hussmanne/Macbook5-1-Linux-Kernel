@@ -20,7 +20,9 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
 - One combined slim/performance/power build; no competing custom kernel variants.
 - User-directed **CONFIG_CPU_MITIGATIONS=n**. This deliberately removes optional CPU speculative-execution side-channel protections; cannot be reversed with a boot flag.
 - Hardware family trimming, no heavy debug/sanitizer builds; retain DEBUG_FS, FTRACE and PERF_EVENTS for PowerTOP and vga_switcheroo.
-- Upstream EEVDF, NO_HZ_IDLE, 500 Hz tick, ACPI CPU idle/frequency scaling, MGLRU, LZ4 zram.
+- Upstream EEVDF with lazy dynamic preemption, NO_HZ_IDLE, 1000 Hz tick
+  (this upstream tree lacks 500 Hz), schedutil on ACPI cpufreq, 2-CPU maximum,
+  MGLRU and a true LZ4-enabled zram backend.
 - Reapply **global powertop --auto-tune** after boot and wake. This may affect peripheral reliability; it is a user-requested aggressive policy.
 - Do **not** automatically cut GPU power, force PCIe ASPM, or use risky SATA link policies until tested on the real machine.
 - Retain the existing stock Arch kernel and bootable recovery media.

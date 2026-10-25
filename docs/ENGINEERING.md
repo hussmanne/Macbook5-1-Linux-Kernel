@@ -45,14 +45,19 @@ with tick/preemption choices inspired by low-latency kernel builds.
 
 ## One configuration
 
-Generic x86-64 GCC output at first: Intel Penryn cannot run x86-64-v2/v3
-binaries. Avoid blindly using -march=native from a newer CI CPU or -O3.
+Preserve generic x86-64 ISA code generation with `KCFLAGS=-mtune=core2` for
+Penryn instruction scheduling (not `-march=core2`). This is a small, plausible
+optimisation rather than a promised benchmark speedup. Intel Penryn cannot
+run x86-64-v2/v3 binaries. Never use -march=native from a newer CI CPU or -O3.
 Prefer CONFIG_HZ_500 if upstream provides it. The pinned source does not:
 it offers 100/250/300/1000 Hz, so the current build selects 1000 Hz for
 interactive responsiveness, with NO_HZ_IDLE to suppress periodic idle ticks.
 This is an explicit compromise, not evidence of better battery runtime.
-Require PREEMPT_DYNAMIC and the regular upstream scheduler. Preserve
-high-resolution timers, SMP, ACPI CPU_FREQ, CPU_IDLE and thermal management.
+Require PREEMPT_DYNAMIC + PREEMPT_LAZY, SCHED_AUTOGROUP, and the regular upstream
+scheduler. Set NR_CPUS=2 for the fixed dual-core P8600, and default the CPU
+frequency governor to schedutil for the ACPI cpufreq driver. Remove unused
+Intel/AMD pstate driver logic. Preserve high-resolution timers, SMP, ACPI
+CPU_FREQ, CPU_IDLE and thermal management.
 
 Strip unused DRM families, unrelated WLAN stacks, nonapplicable server buses,
 virtualization host features, debug info, BTF, KASAN/KCSAN/UBSAN, heavy lock
@@ -82,7 +87,10 @@ Do not run TLP concurrently as an overlapping power manager. Avoid blind
 pcie_aspm=force, unsafe SATA aggressive ALPM, disabling interrupt timers, or
 automatic vga_switcheroo discrete-rail power-off.
 
-Memory: MGLRU, supported ZRAM and LZ4; userspace zram-generator creates up to
+Memory: MGLRU, ZRAM_BACKEND_LZ4=y and ZRAM_DEF_COMP_LZ4=y, not merely
+CRYPTO_LZ4=y. The first compiled version incorrectly forced LZO-RLE, which
+would reject the requested LZ4 userspace setting. The corrected userspace
+zram-generator creates up to
 4 GiB of logical compressed swap, swappiness 100, page-cluster 0. No disk
 hibernation: suspend-to-RAM already worked in MX. No promise of improved power
 from compressed swap when RAM is not pressured.

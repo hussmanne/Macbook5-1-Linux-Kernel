@@ -36,6 +36,19 @@ else
   yes HZ_1000
   "$config" --set-val HZ 1000
 fi
+# Fixed Penryn Core 2 Duo machine: only two execution cores; retain SMP.
+"$config" --set-val NR_CPUS 2
+# Use scheduler-coupled ACPI frequency scaling and desktop process grouping.
+yes CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
+yes SCHED_AUTOGROUP
+# LZ4 backend is separate from CRYPTO_LZ4. Without this, zram-generator's
+# compression-algorithm=lz4 setting fails even though CRYPTO_LZ4=y.
+yes ZRAM_BACKEND_LZ4
+yes ZRAM_DEF_COMP_LZ4
+no ZRAM_BACKEND_LZO
+# Unsupported pstate drivers for this pre-Nehalem Intel platform.
+no X86_AMD_PSTATE
+no X86_INTEL_PSTATE
 yes HIGH_RES_TIMERS
 yes CC_OPTIMIZE_FOR_PERFORMANCE
 no NO_HZ_FULL
