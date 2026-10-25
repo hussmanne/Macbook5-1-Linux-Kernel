@@ -11,19 +11,13 @@ on:
         description: "Successful build run containing mbp51-kernel-and-headers"
         required: true
         type: string
-        default: "40166412535"
-  # Exercise the initial test immediately once this workflow reaches main.
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/broadcom-compatibility.yml"
-      - "scripts/check-broadcom-dkms.sh"
-      - "compat/broadcom/**"
+        default: ""
+  # Only exact successful kernel/header runs qualify; manual runs require an explicit run ID.
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: mbp51-broadcom-${{ github.event.workflow_run.id || inputs.run_id || '40166412535' }}
+  group: mbp51-broadcom-${{ github.event.workflow_run.id || inputs.run_id || '' }}
   cancel-in-progress: false
 jobs:
   wl-dkms:
