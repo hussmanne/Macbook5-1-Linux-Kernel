@@ -35,7 +35,7 @@ jobs:
           key: mbp51-linux-source-${{ hashFiles('source.lock') }}
       - name: Check cache provenance
         run: |
-          if [ -f ".cache/kconfig/linux-$(. source.lock; printf %s "$SOURCE_SHA").tar.gz" ]; then
+          if [ -f ".cache/kconfig/linux-$(. ./source.lock; printf %s "$SOURCE_SHA").tar.gz" ]; then
             echo "Pinned source archive restored; build script will verify its SHA-256."
           else
             echo "Pinned source archive cache missing; build script will retry codeload."
