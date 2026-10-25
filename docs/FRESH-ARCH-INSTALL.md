@@ -62,7 +62,9 @@ Download the exact successful `mbp51-kernel-and-headers` artifact:
 https://github.com/hussmanne/Macbook5-1-Linux-Kernel/actions/runs/40175619281
 (GitHub may require a logged-in browser.)
 
-On installed Arch, extract the artifact to this repo's `dist/`:
+The installer copied the repository into the new user's home directory.
+On installed Arch, download/unzip the artifact into `~/Macbook5-1-Linux-Kernel/dist/`.
+The exact downloaded kernel archive is not bundled with the ISO.
 
     bash scripts/verify-artifacts.sh dist
 

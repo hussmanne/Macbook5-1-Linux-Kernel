@@ -28,7 +28,7 @@ if [[ "$mode" == --plan ]]; then echo "Read-only plan: no changes made"; exit 0;
 [[ "$EUID" -eq 0 && -d /run/archiso && -f /etc/arch-release ]] || {
   echo "EXECUTE ONLY IN THE OFFICIAL ARCH ISO AS ROOT" >&2; exit 2;
 }
-for cmd in sgdisk wipefs partprobe udevadm mkfs.fat mkfs.btrfs btrfs pacstrap genfstab arch-chroot; do
+for cmd in sgdisk wipefs partprobe udevadm mkfs.fat mkfs.btrfs btrfs pacstrap genfstab arch-chroot curl; do
   command -v "$cmd" >/dev/null || { echo "Missing $cmd"; exit 2; }
 done
 if lsblk -nrpo MOUNTPOINTS "$disk" | grep -q '[^[:space:]]'; then
@@ -117,6 +117,10 @@ arch-chroot /mnt test -s /boot/vmlinuz-linux-lts
 arch-chroot /mnt test -s /boot/initramfs-linux-lts.img
 arch-chroot /mnt test -s /boot/EFI/BOOT/BOOTX64.EFI
 arch-chroot /mnt grub-script-check /boot/grub/grub.cfg
+# Persist this exact tested installer/repo across the LiveUSB -> SSD reboot.
+[[ "$repo_root" != /mnt/* ]] || { echo "Refuse recursive repository copy from /mnt"; exit 1; }
+cp -a "$repo_root" "/mnt/home/$user/Macbook5-1-Linux-Kernel"
+arch-chroot /mnt chown -R "$user:$user" "/home/$user/Macbook5-1-Linux-Kernel"
 echo "PASS: Arch SSD installation complete. Default LTS boot preserved."
 echo "sync; umount -R /mnt; reboot"
 echo "Then run the separate experimental kernel activation procedure."
