@@ -13,7 +13,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Audit repository scripts and source lock
-        run: bash scripts/lint.sh
+        run: |
+          bash scripts/lint.sh
+          bash scripts/test-verify-artifacts.sh
 
   kconfig:
     runs-on: ubuntu-24.04

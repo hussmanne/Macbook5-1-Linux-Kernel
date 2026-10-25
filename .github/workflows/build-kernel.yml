@@ -37,10 +37,7 @@ jobs:
       - name: Verify package checksums and build manifests
         run: |
           ls -lah dist/
-          test -s dist/kernelrelease.txt
-          test -s dist/resolved.config
-          test -s dist/packages.sha256
-          (cd dist && sha256sum -c packages.sha256)
+          bash scripts/verify-artifacts.sh dist
       - uses: actions/upload-artifact@v4
         with:
           name: mbp51-kernel-and-headers
