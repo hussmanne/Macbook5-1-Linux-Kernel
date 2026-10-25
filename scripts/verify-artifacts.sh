@@ -8,22 +8,26 @@ for f in kernelrelease.txt build-manifest.txt resolved.config packages.sha256; d
   [[ -s "$dist/$f" ]] || { echo "Missing or empty artifact: $f" >&2; exit 1; }
 done
 release=$(< "$dist/kernelrelease.txt")
-source "$root/source.lock"
-[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2" ]] || { echo "Source-specific ABI invalid" >&2; exit 1; }
-[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*-mbp51-extreme-g[0-9a-f]{8}-v2$ &&
+source "$root/scripts/tier-profile.sh"
+[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*$ &&
    "$release" == *"$KERNEL_LOCALVERSION" ]] || {
   echo "Unexpected kernel release: $release" >&2; exit 1;
 }
 grep -Fxq "kernel_release=$release" "$dist/build-manifest.txt" || {
   echo "Kernel release disagrees with build manifest" >&2; exit 1;
 }
-source "$root/source.lock"
 grep -Fxq "source_commit=$SOURCE_SHA" "$dist/build-manifest.txt" || {
   echo "Pinned upstream SHA disagrees with build manifest" >&2; exit 1;
 }
+if [[ "$MBP51_TIER" != legacy ]]; then
+  grep -Fxq "kernel_tier=$MBP51_TIER" "$dist/build-manifest.txt" &&
+    grep -Fxq "pkgbase=$MBP51_PKGBASE" "$dist/build-manifest.txt" || {
+      echo "Tier/package identity mismatch" >&2; exit 1;
+    }
+fi
 shopt -s nullglob
-kernel=("$dist"/linux-mbp51-extreme-[0-9]*-x86_64.pkg.tar.zst)
-headers=("$dist"/linux-mbp51-extreme-headers-[0-9]*-x86_64.pkg.tar.zst)
+kernel=("$dist"/"$MBP51_PKGBASE"-[0-9]*-x86_64.pkg.tar.zst)
+headers=("$dist"/"$MBP51_PKGBASE"-headers-[0-9]*-x86_64.pkg.tar.zst)
 all=("$dist"/*.pkg.tar.zst)
 [[ ${#kernel[@]} -eq 1 && ${#headers[@]} -eq 1 && ${#all[@]} -eq 2 ]] || {
   echo "Expected exactly one kernel and one headers package" >&2; exit 1;
