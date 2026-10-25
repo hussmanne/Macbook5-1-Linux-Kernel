@@ -66,12 +66,19 @@ On installed Arch, extract the artifact to this repo's `dist/`:
 
     bash scripts/verify-artifacts.sh dist
 
-Then use the separately provided experimental-kernel activation helper.
-It must verify archive hashes, install matching headers and kernel,
-locally build proprietary `wl.ko` via
-`compat/broadcom/make-local-package.sh`, and add a manual
-GRUB entry while keeping Linux LTS the default. Do not rely on pacman
-automatically installing our nonstandard kernel image in /boot.
+Then verify the artifact and activate the custom kernel from the
+**already-booted LTS Arch desktop, as an ordinary user**:
+
+    cd ~/Macbook5-1-Linux-Kernel
+    bash scripts/verify-artifacts.sh dist
+    bash install/activate-custom-kernel.sh --plan dist
+    bash install/activate-custom-kernel.sh --install dist
+
+The activation script installs exact matching headers and kernel,
+builds proprietary `wl.ko` locally (without redistributing it), installs
+a pacman-managed Broadcom module, and creates a **manual GRUB menu entry**
+under /boot/mbp51. Stock Arch LTS remains menu entry zero and default.
+Do not try the custom kernel before the baseline LTS boot works.
 
 After confirming the custom boot, apply requested global startup/resume
 PowerTOP tuning:
