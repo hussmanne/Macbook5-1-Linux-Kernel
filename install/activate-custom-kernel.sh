@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Separate experimental kernel entry; LTS always remains GRUB default.
+set -euo pipefail
+repo=$(cd "$(dirname "$0")/.." && pwd)
+source "$repo/source.lock"
+mode=--plan
+dist="$repo/dist"
+[[ $# -lt 1 ]] || mode="$1"
+[[ $# -lt 2 ]] || dist="$2"
+[[ "$mode" == --plan || "$mode" == --install ]] || {
+  echo "Usage: $0 --plan [DIST_DIR] | --install [DIST_DIR]"; exit 2;
+}
+[[ "$EUID" -ne 0 ]] || { echo "Run as ordinary user, sudo handles install"; exit 2; }
+bash "$repo/scripts/verify-artifacts.sh" "$dist"
+release=$(cat "$dist/kernelrelease.txt")
+[[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
+  echo "Wrong pinned release: $release" >&2; exit 2;
+}
+shopt -s nullglob
+kernels=("$dist"/linux-mbp51-extreme-[0-9]*-x86_64.pkg.tar.zst)
+headers=("$dist"/linux-mbp51-extreme-headers-[0-9]*-x86_64.pkg.tar.zst)
+[[ ${#kernels[@]} -eq 1 && ${#headers[@]} -eq 1 ]] || exit 2
+echo "Verified kernel ABI: $release"
+echo "Phase 2: install both packages, privately compile and package wl, add GRUB entry."
+if [[ "$mode" == --plan ]]; then echo "Read-only; no changes made"; exit 0; fi
+[[ -f /etc/arch-release ]] || { echo "Requires installed Arch Linux"; exit 2; }
+[[ "$(findmnt -no FSTYPE /)" == btrfs && "$(findmnt -no FSTYPE /boot)" == vfat ]] || {
+  echo "Expected mounted Btrfs root and FAT32 EFI /boot" >&2; exit 2;
+}
+[[ -s /boot/vmlinuz-linux-lts && -s /boot/initramfs-linux-lts.img &&
+   -s /boot/grub/grub.cfg ]] || { echo "Stock LTS rescue entry missing"; exit 2; }
+grep -Eq '^GRUB_DEFAULT="?0"?$' /etc/default/grub || {
+  echo "LTS must remain GRUB_DEFAULT=0" >&2; exit 2;
+}
+sudo pacman -U --noconfirm "${kernels[0]}" "${headers[0]}"
+test -s "/usr/lib/modules/$release/build/Module.symvers"
+bash "$repo/compat/broadcom/make-local-package.sh" "$release"
+pkgdir="$repo/.work/broadcom/$release/package"
+(cd "$pkgdir" && sha256sum -c module-package.sha256)
+modules=("$pkgdir"/mbp51-broadcom-wl-*.pkg.tar.zst)
+[[ ${#modules[@]} -eq 1 ]] || { echo "Wrong private wl package count"; exit 1; }
+sudo pacman -U --noconfirm "${modules[0]}"
+sudo depmod -a "$release"
+actual=$(modinfo -k "$release" -n wl)
+[[ "$actual" == "/usr/lib/modules/$release/updates/mbp51/wl.ko" ]] || {
+  echo "Wrong selected wl module: $actual"; exit 1;
+}
+sudo install -Dm644 "/usr/lib/modules/$release/vmlinuz" /boot/mbp51/vmlinuz
+sudo mkinitcpio -k "$release" -g /boot/mbp51/initramfs.img
+[[ -s /boot/mbp51/vmlinuz && -s /boot/mbp51/initramfs.img ]] || exit 1
+boot_uuid=$(findmnt -no UUID /boot)
+root_uuid=$(findmnt -no UUID /)
+[[ "$boot_uuid" =~ ^[A-Fa-f0-9-]+$ && "$root_uuid" =~ ^[A-Fa-f0-9-]+$ ]] || {
+  echo "Unexpected root or EFI UUID format"; exit 1;
+}
+ucode=''
+[[ ! -s /boot/intel-ucode.img ]] || ucode='/intel-ucode.img '
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp" <<EOF
+#!/bin/sh
+# Deliberately after 10_linux; LTS stays GRUB_DEFAULT=0.
+cat <<'MBP51_GRUB'
+menuentry 'MacBookPro5,1 experimental Linux 7.4-development' --id=mbp51-experimental {
+  insmod part_gpt
+  insmod fat
+  search --no-floppy --fs-uuid --set=root $boot_uuid
+  linux /mbp51/vmlinuz root=UUID=$root_uuid rootflags=subvol=@ rw
+  initrd $ucode/mbp51/initramfs.img
+}
+MBP51_GRUB
+EOF
+sudo install -m755 "$tmp" /etc/grub.d/41_mbp51-experimental
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+sudo grub-script-check /boot/grub/grub.cfg
+grep -Fq 'MacBookPro5,1 experimental Linux 7.4-development' /boot/grub/grub.cfg
+grep -Eq '^GRUB_DEFAULT="?0"?$' /etc/default/grub
+echo "PASS: Linux 7.4-development and patched wl installed; LTS remains default."
+echo "Reboot and MANUALLY choose experimental from GRUB."
