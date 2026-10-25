@@ -40,6 +40,10 @@ jobs:
             echo "Resolving ${#names[@]} official Arch packages (no installation):"
             printf "%s\n" "${names[@]}"
             test "${#names[@]}" -gt 55
-            pacman -Sp --noconfirm "${names[@]}" >/dev/null
+            if ! pacman -Sp --noconfirm "${names[@]}" >/tmp/package-resolution.txt 2>&1; then
+              echo "Package resolution failed; full diagnostic output:"
+              cat /tmp/package-resolution.txt
+              exit 1
+            fi
             echo "PASS: every installer package is resolvable in official Arch repositories"
           '
