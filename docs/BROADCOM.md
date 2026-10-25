@@ -37,6 +37,50 @@ compile errors, disable warnings globally, or insert unsupported kernel stubs.
 If all maintained patches fail, propose a minimal, source-documented patch and
 test it on CI before considering a driver fork.
 
+## Local build without damaging the stock recovery kernel
+
+The CI compatibility script patches Arch `broadcom-wl-dkms` **in an ephemeral
+container**, so installing the ordinary unpatched package on the MacBook
+does not automatically provide compatible `wl.ko` for this custom kernel.
+
+A separate **unprivileged, build-only** helper now reproduces the patch/build
+locally in an isolated copy. It does not edit `/usr/src`, the current Arch
+driver, the bootloader, or any loaded module:
+
+```bash
+# Boot the STOCK working kernel. Install matching custom kernel headers first.
+# Ensure base-devel, python, kmod and broadcom-wl-dkms are installed.
+bash compat/broadcom/build-on-device.sh 7.3.0-mbp51-extreme
+```
+
+Successful output is under
+`.work/broadcom/7.3.0-mbp51-extreme/wl.ko` with SHA256, build log,
+source-patch manifest and vermagic. This keeps the original DKMS source
+unmodified, so later attempts to rebuild against the stock kernel still use
+Arch's normal patches.
+
+**Do not copy the resulting module into the custom kernel automatically.**
+Once the custom kernel packages and matching headers have been installed
+without replacing the stock kernel, after reviewing the module provenance
+and checksums, installation of this *locally built* module may be done by
+an administrator while still booted on the known-working stock kernel:
+
+```bash
+K=7.3.0-mbp51-extreme
+(cd ".work/broadcom/$K" && sha256sum -c wl.ko.sha256)
+sudo install -Dm644 ".work/broadcom/$K/wl.ko" \
+  "/usr/lib/modules/$K/updates/mbp51/wl.ko"
+sudo depmod -a "$K"
+modinfo -k "$K" -F vermagic wl
+```
+
+Keep working wired networking and recovery boot media; **do not try to
+modprobe this module into the running stock kernel**. If the custom kernel
+fails to load it, select the stock kernel and remove only the custom
+`/usr/lib/modules/$K/updates/mbp51/wl.ko`, then run `depmod -a "$K"`.
+This manually installed module is not DKMS-managed: rebuild after custom
+kernel/header updates, and verify again after Arch package upgrades.
+
 ## Real-hardware checklist (only after packages and recovery route are ready)
 
 With wired fallback available and stock kernel selectable:

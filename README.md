@@ -67,3 +67,8 @@ After every successful kernel build, a separate read-only runner validates the
 maintained Arch `broadcom-wl-dkms` package against exactly the published kernel
 headers. This is a compile/link check, **not** a device scan or connectivity
 guarantee. See [Broadcom qualification](docs/BROADCOM.md).
+
+The on-device [Broadcom build-only helper](compat/broadcom/build-on-device.sh)
+can compile the source-locked patch in a private directory without overwriting
+the Arch-maintained Broadcom source or automatically loading the module.
+This is separate from first-boot qualification.
