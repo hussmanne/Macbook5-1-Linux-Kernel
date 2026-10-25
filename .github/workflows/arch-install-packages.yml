@@ -1,0 +1,35 @@
+name: Arch installer package compatibility
+on:
+  pull_request:
+    paths:
+      - 'install/**'
+      - '.github/workflows/arch-install-packages.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'install/**'
+      - '.github/workflows/arch-install-packages.yml'
+permissions:
+  contents: read
+jobs:
+  official-package-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve entire fresh-install package list on current Arch repos
+        run: |
+          docker run --rm -v "$PWD:/work:ro" -w /work archlinux:base-devel bash -euc '
+            pacman -Sy --noconfirm
+            mapfile -t names < <(
+              sed -n "/^pacstrap -K \\/mnt /,/^genfstab -U \\/mnt/{/^genfstab/d;s/^pacstrap -K \\/mnt //;s/\\\\//g;p;}" \
+                install/archiso-install.sh | xargs -n1
+            )
+            echo "Resolving ${#names[@]} official Arch packages (no installation):"
+            printf "%s\n" "${names[@]}"
+            test "${#names[@]}" -gt 55
+            pacman -Sp --noconfirm "${names[@]}" >/dev/null
+            echo "PASS: every installer package is resolvable in official Arch repositories"
+          '
