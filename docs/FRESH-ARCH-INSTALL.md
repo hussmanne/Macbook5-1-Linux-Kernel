@@ -90,3 +90,21 @@ PowerTOP tuning:
 Keep a record of baseline Wi-Fi and USB/suspend behavior before enabling.
 The experimental kernel sets CONFIG_CPU_MITIGATIONS=n by user choice;
 stock LTS retains normal mitigations and remains the boot fallback.
+
+## EndeavourOS actual installed system
+
+The MacBook runs EndeavourOS with Btrfs root and Btrfs /boot, a vfat EFI
+partition mounted on /boot/efi, GRUB, and Dracut, rather than the vanilla
+Arch installer's FAT32 /boot and mkinitcpio layout. The custom-kernel activation
+script is specialized to the installed layout and will refuse other layouts.
+Both working stock kernels (linux and linux-lts) remain untouched.
+
+Download the successful kernel and headers artifact from
+https://github.com/hussmanne/Macbook5-1-Linux-Kernel/actions/runs/40175619281
+and extract all its files directly to dist/ in a current repository clone.
+
+    bash scripts/verify-artifacts.sh dist
+    bash install/activate-custom-kernel.sh --plan dist
+    bash install/activate-custom-kernel.sh --install dist
+
+The custom entry is appended to the GRUB menu. It is not the default.
