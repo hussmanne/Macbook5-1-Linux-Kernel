@@ -8,4 +8,5 @@ grep -q 'no CPU_MITIGATIONS' scripts/configure.sh
 grep -q 'no ZSWAP' scripts/configure.sh
 grep -q 'CPU_MITIGATIONS' scripts/audit-config.sh
 grep -q '^ExecStart=/usr/bin/powertop --auto-tune' runtime/systemd/mbp51-powertop.service
+python3 -m py_compile compat/broadcom/patch-broadcom-wl.py
 echo "Static validation passed; compilation not yet proven."
