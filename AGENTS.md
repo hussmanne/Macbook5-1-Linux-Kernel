@@ -13,5 +13,5 @@ Key rules:
 - Keep legacy/Daily/BORE/Lab packages and matching Broadcom modules isolated.
 - BORE/Extreme do not exist until real patches and tests prove them.
 - Prefer measurable, reversible changes and disclose CI vs physical evidence.
-- Start with an inspection of \`git status\`, current CI, and source.lock;
+- Start with an inspection of `git status`, current CI, and source.lock;
   work in small reviewed branches without clobbering local user edits.
