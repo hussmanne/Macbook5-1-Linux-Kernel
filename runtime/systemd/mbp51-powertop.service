@@ -1,0 +1,12 @@
+[Unit]
+Description=MacBookPro5,1 global PowerTOP automatic tuning
+After=multi-user.target
+ConditionPathExists=/usr/bin/powertop
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/powertop --auto-tune
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

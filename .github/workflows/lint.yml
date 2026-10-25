@@ -1,0 +1,14 @@
+name: Static validation
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit repository scripts and source lock
+        run: bash scripts/lint.sh
