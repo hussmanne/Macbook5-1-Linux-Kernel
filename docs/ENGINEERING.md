@@ -55,9 +55,10 @@ interactive responsiveness, with NO_HZ_IDLE to suppress periodic idle ticks.
 This is an explicit compromise, not evidence of better battery runtime.
 Require PREEMPT_DYNAMIC + PREEMPT_LAZY, SCHED_AUTOGROUP, and the regular upstream
 scheduler. Set NR_CPUS=2 for the fixed dual-core P8600, and default the CPU
-frequency governor to schedutil for the ACPI cpufreq driver. Remove unused
-Intel/AMD pstate driver logic. Preserve high-resolution timers, SMP, ACPI
-CPU_FREQ, CPU_IDLE and thermal management.
+frequency governor to schedutil for the ACPI cpufreq driver. Do not attempt to force Kconfig's built-in pstate support off: it will not
+bind to this Penryn, and the correct ACPI cpufreq driver is required separately.
+Preserve high-resolution timers, SMP, ACPI CPU_FREQ, CPU_IDLE and thermal
+management.
 
 Strip unused DRM families, unrelated WLAN stacks, nonapplicable server buses,
 virtualization host features, debug info, BTF, KASAN/KCSAN/UBSAN, heavy lock

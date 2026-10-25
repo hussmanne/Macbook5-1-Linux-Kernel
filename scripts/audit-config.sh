@@ -42,7 +42,9 @@ for s in DRM_NOUVEAU FORCEDETH SENSORS_APPLESMC HID_APPLE MOUSE_BCM5974 \
   USB_EHCI_HCD USB_OHCI_HCD SND_HDA_INTEL USB_VIDEO_CLASS CFG80211 \
   ZRAM BTRFS_FS X86_ACPI_CPUFREQ; do expect "$s" m; done
 for s in APPLE_GMUX USB_HID; do expect "$s" any; done
-for s in ZRAM_BACKEND_LZO ZRAM_BACKEND_FORCE_LZO X86_INTEL_PSTATE X86_AMD_PSTATE; do expect "$s" n; done
+# Kconfig does not emit an explicitly disabled entry for the invisible
+# FORCE_LZO derived symbol. LZ4=y + LZO disabled are the authoritative checks.
+expect ZRAM_BACKEND_LZO n
 expect ZRAM_DEF_COMP '"lz4"'
 expect NR_CPUS 2
 [[ "$fail" == 0 ]] || { echo "Kconfig audit FAILED" >&2; exit 1; }

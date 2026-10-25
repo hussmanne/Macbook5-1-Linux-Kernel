@@ -46,9 +46,6 @@ yes SCHED_AUTOGROUP
 yes ZRAM_BACKEND_LZ4
 yes ZRAM_DEF_COMP_LZ4
 no ZRAM_BACKEND_LZO
-# Unsupported pstate drivers for this pre-Nehalem Intel platform.
-no X86_AMD_PSTATE
-no X86_INTEL_PSTATE
 yes HIGH_RES_TIMERS
 yes CC_OPTIMIZE_FOR_PERFORMANCE
 no NO_HZ_FULL
