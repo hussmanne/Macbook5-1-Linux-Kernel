@@ -36,7 +36,7 @@ printf 'Target ABI: %s\n' "$K"
 ```
 
 The expected development-source-specific suffix is
-`-mbp51-extreme-g21a7f44`. The source Makefile may still say 7.3.0:
+`-mbp51-extreme-g21a7f44f`. The source Makefile may still say 7.3.0:
 this **does not** indicate a released 7.4 kernel. Never use a package/headers
 pair for an older `-mbp51-extreme` release.
 

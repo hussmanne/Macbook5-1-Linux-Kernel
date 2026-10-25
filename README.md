@@ -77,7 +77,7 @@ This is separate from first-boot qualification.
 
 The patched proprietary Broadcom module can now be compiled **locally** and
 packaged as a normal, version-locked `mbp51-broadcom-wl` Arch package:
-`bash compat/broadcom/make-local-package.sh 7.3.0-mbp51-extreme-g21a7f44`.
+`bash compat/broadcom/make-local-package.sh 7.3.0-mbp51-extreme-g21a7f44f`.
 No vendor binary is published by our public CI. The boot image and module
 package must share the exact `kernelrelease.txt` value. Installation is
 deferred until the machine's boot partition and known-good recovery entry

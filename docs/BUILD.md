@@ -48,7 +48,7 @@ user, but this is optional.
 
 `source.lock` fixes both the upstream Git SHA and independently measured
 codeload SHA256. The pinned tree's Makefile still reports `7.3.0`; the
-release has an additional `-mbp51-extreme-g21a7f44` ABI suffix.
+release has an additional `-mbp51-extreme-g21a7f44f` ABI suffix.
 Any later source change must regenerate both the tarball digest and local
 release suffix, update the Broadcom source-locked patch, rerun Kconfig,
 full compile and exact-header DKMS packaging checks.

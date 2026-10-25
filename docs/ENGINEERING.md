@@ -143,7 +143,7 @@ PowerTOP tunables on the MacBook. Avoid calling these items complete.
 The torvalds/linux pin is `21a7f44fd0765fcc5194130b28767786eba1d1e7`,
 with a GitHub Actions-measured source tar SHA256 stored in `source.lock`.
 The tree still reports 7.3.0, so the distinct `LOCALVERSION`
-`-mbp51-extreme-g21a7f44` is mandatory to prevent reused header/DKMS
+`-mbp51-extreme-g21a7f44f` is mandatory to prevent reused header/DKMS
 paths between commits. Upstream kernel config retains LZ4 zram, schedutil,
 PREEMPT_LAZY, Core 2 tuning and user-requested CPU mitigation policy.
 Avoid separately grafting 7.4 scheduler commits after updating the source pin.
