@@ -40,4 +40,5 @@ jobs:
             archlinux:base-devel bash -euc '
               pacman -Syu --noconfirm --needed curl bc bison flex
               bash scripts/check-kconfig.sh
+              MBP51_TIER=daily bash scripts/check-kconfig.sh
             '
