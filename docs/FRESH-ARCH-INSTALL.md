@@ -90,3 +90,32 @@ PowerTOP tuning:
 Keep a record of baseline Wi-Fi and USB/suspend behavior before enabling.
 The experimental kernel sets CONFIG_CPU_MITIGATIONS=n by user choice;
 stock LTS retains normal mitigations and remains the boot fallback.
+
+## Installed EndeavourOS layout (real device, October 25, 2026)
+
+The user installed EndeavourOS via Calamares, not the repo's Arch ISO
+script. The actual Btrfs root has UUID
+`a75e472c-72e1-4baf-a998-7f2afef7a651`, the vfat ESP at
+`/boot/efi` is UUID `AD3B-DF67`, and `/boot` is on Btrfs.
+The installed initramfs generator is **Dracut 112_eos-1**, with GRUB
+2.16. Stock `linux-lts` 6.18.58-1-lts and `linux` 7.2.11.arch1-1
+are installed, and Broadcom wl connects on LTS. The correct second-stage
+helper is `install/activate-custom-kernel.sh`, which now checks this
+layout and generates a Dracut image in `/boot/mbp51`, registering its
+own GRUB entry on Btrfs without changing the stock default.
+
+**Do not execute the fresh SSD installer on an installed EndeavourOS
+system.** The fresh installer is for official Arch ISO and wipes SSD.
+
+### Handoff for experiment
+
+1. Clone repo to the installed EndeavourOS desktop.
+2. Download the already-passing Actions run 40175619281 kernel/headers
+   artifact, and extract its contents directly to `dist/`.
+3. Run `bash scripts/verify-artifacts.sh dist` and
+   `bash install/activate-custom-kernel.sh --plan dist`.
+4. The real installation is `bash install/activate-custom-kernel.sh
+   --install dist` run as a normal user from the working LTS desktop.
+   Requires local `broadcom-wl-dkms` sources and build tools.
+5. The new GRUB entry is manual; original kernel entries remain.
+   Confirm custom kernel, Wi-Fi and graphics, then qualify sleep/power.
