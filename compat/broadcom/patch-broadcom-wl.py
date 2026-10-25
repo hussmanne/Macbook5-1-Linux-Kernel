@@ -13,7 +13,7 @@ if len(sys.argv) != 4:
     sys.exit("Usage: patch-broadcom-wl.py SOURCE_DIR KERNEL_RELEASE REPORT_DIR")
 src, release, report = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 report.mkdir(parents=True, exist_ok=True)
-root = Path(__file__).resolve().parent.parent
+root = Path(__file__).resolve().parents[2]
 locked_sha = "330517c63aa9b48227b6ab45f01003effac77ae4"
 if "SOURCE_SHA=" + locked_sha not in (root / "source.lock").read_text():
     sys.exit("Pinned source moved; review driver compatibility before updating")
