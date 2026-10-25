@@ -22,7 +22,8 @@ jobs:
       - name: Resolve entire fresh-install package list on current Arch repos
         run: |
           docker run --rm -v "$PWD:/work:ro" -w /work archlinux:base-devel bash -euc '
-            pacman -Sy --noconfirm
+            # Match a fully updated target, avoid partial-upgrade libelf conflicts.
+            pacman -Syu --noconfirm
             names=()
             collecting=false
             while read -r first rest; do
