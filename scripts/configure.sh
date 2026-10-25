@@ -4,7 +4,7 @@ set -euo pipefail
 [[ $# -eq 1 && -f "$1/scripts/config" ]] || { echo "Usage: $0 /path/to/linux" >&2; exit 2; }
 root=$(cd "$(dirname "$0")/.." && pwd)
 source "$root/source.lock"
-[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}" ]] || exit 2
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2" ]] || exit 2
 cd "$1"
 config=./scripts/config
 yes() { "$config" --enable "$1"; }
@@ -19,19 +19,26 @@ for s in EFI EFI_STUB PM ACPI SUSPEND CPU_IDLE CPU_FREQ \
   NET INET WIRELESS RFKILL SOUND SND HWMON THERMAL \
   FB VGA_SWITCHEROO PERF_EVENTS DEBUG_FS FTRACE \
   LRU_GEN LRU_GEN_ENABLED CRYPTO_LZ4 \
-  NO_HZ_IDLE PREEMPT_DYNAMIC SECCOMP SECCOMP_FILTER NAMESPACES CGROUPS \
+  NO_HZ_IDLE PREEMPT_DYNAMIC SECCOMP SECCOMP_FILTER NAMESPACES USER_NS \
+  CGROUPS MEMCG PSI ACPI_EC ACPI_BATTERY I2C BTRFS_FS_POSIX_ACL \
   MEDIA_SUPPORT MEDIA_CAMERA_SUPPORT MEDIA_USB_SUPPORT VIDEO_DEV; do yes "$s"; done
 
 for s in X86_ACPI_CPUFREQ BTRFS_FS CFG80211 ZRAM \
   DRM_NOUVEAU APPLE_GMUX SENSORS_APPLESMC HID_APPLE \
   MOUSE_BCM5974 FORCEDETH USB_OHCI_HCD USB_EHCI_HCD USB_XHCI_HCD \
   USB_STORAGE USB_VIDEO_CLASS BT_HCIBTUSB \
-  SND_HDA_INTEL FIREWIRE_OHCI EXFAT_FS \
+  SND_HDA_INTEL SND_HDA_CODEC_REALTEK SND_USB_AUDIO ACPI_SBS \
+  FIREWIRE_OHCI EXFAT_FS \
   USB_OHCI_HCD_PCI USB_EHCI_PCI; do mod "$s"; done
 
 yes DRM
 yes BT
 yes FIREWIRE
+# The MCP79 controller requires an actual codec driver for internal audio.
+mod SND_HDA_GENERIC
+# Remove unneeded cgroup debugging. AMD P-state is selected by upstream
+# processor Kconfig even on Intel builds; it cannot be disabled here.
+no CGROUP_DEBUG
 if grep -q '^config HZ_500$' kernel/Kconfig.hz; then
   yes HZ_500
   "$config" --set-val HZ 500

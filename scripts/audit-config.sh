@@ -20,7 +20,8 @@ expect() {
   echo "ERROR: CONFIG_$symbol must be $wanted; resolved [$actual]" >&2
   fail=1
 }
-for s in CPU_MITIGATIONS HIBERNATION ZSWAP KASAN KCSAN UBSAN KVM; do expect "$s" n; done
+for s in CPU_MITIGATIONS HIBERNATION ZSWAP KASAN KCSAN UBSAN KVM \
+  CGROUP_DEBUG; do expect "$s" n; done
 if has_symbol DEBUG_INFO; then
   expect DEBUG_INFO n
 else
@@ -32,7 +33,9 @@ for s in MODULES MODVERSIONS EFI EFI_STUB ACPI SUSPEND SATA_AHCI BLK_DEV_SD EXT4
   DEBUG_FS PERF_EVENTS FTRACE SMP FB VGA_SWITCHEROO DRM \
   LRU_GEN LRU_GEN_ENABLED CRYPTO_LZ4 ZRAM_BACKEND_LZ4 ZRAM_DEF_COMP_LZ4 \
   MEDIA_SUPPORT MEDIA_CAMERA_SUPPORT MEDIA_USB_SUPPORT VIDEO_DEV \
-  SECCOMP SECCOMP_FILTER NAMESPACES CGROUPS HWMON THERMAL; do expect "$s" y; done
+  SECCOMP SECCOMP_FILTER NAMESPACES USER_NS CGROUPS MEMCG PSI \
+  ACPI_EC ACPI_BATTERY BTRFS_FS_POSIX_ACL \
+  HWMON THERMAL; do expect "$s" y; done
 if has_symbol HZ_500; then
   expect HZ_500 y
   expect HZ 500
@@ -42,7 +45,8 @@ else
 fi
 for s in DRM_NOUVEAU FORCEDETH SENSORS_APPLESMC HID_APPLE MOUSE_BCM5974 \
   USB_EHCI_HCD USB_OHCI_HCD SND_HDA_INTEL USB_VIDEO_CLASS CFG80211 \
-  ZRAM BTRFS_FS X86_ACPI_CPUFREQ; do expect "$s" m; done
+  ZRAM BTRFS_FS X86_ACPI_CPUFREQ SND_HDA_CODEC_REALTEK \
+  SND_USB_AUDIO ACPI_SBS SND_HDA_GENERIC; do expect "$s" m; done
 for s in APPLE_GMUX USB_HID; do expect "$s" any; done
 # Kconfig does not emit an explicitly disabled entry for the invisible
 # FORCE_LZO derived symbol. LZ4=y + LZO disabled are the authoritative checks.
