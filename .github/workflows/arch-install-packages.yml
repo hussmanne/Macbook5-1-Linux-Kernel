@@ -33,7 +33,7 @@ jobs:
               if [[ "$first" == genfstab ]]; then collecting=false; fi
               if $collecting; then
                 for package in $first $rest; do
-                  [[ "$package" == '\\' ]] || names+=("$package")
+                  [[ "$package" =~ ^[a-zA-Z0-9_.+-]+$ ]] && names+=("$package")
                 done
               fi
             done < install/archiso-install.sh
