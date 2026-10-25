@@ -43,3 +43,16 @@ The cloud builder cannot reach the MacBook's hardware.
 For local development, an x86-64 Arch environment with base-devel and
 the documented build dependencies can run scripts/build.sh as an unprivileged
 user, but this is optional.
+
+## Linux 7.4 development pin and wifi artifact
+
+`source.lock` fixes both the upstream Git SHA and independently measured
+codeload SHA256. The pinned tree's Makefile still reports `7.3.0`; the
+release has an additional `-mbp51-extreme-g21a7f44` ABI suffix.
+Any later source change must regenerate both the tarball digest and local
+release suffix, update the Broadcom source-locked patch, rerun Kconfig,
+full compile and exact-header DKMS packaging checks.
+
+The wifi workflow publishes text diagnostics and a local package metadata
+report, but deliberately never publishes proprietary `wl.ko` or the local
+module package. Use `make-local-package.sh` on the target Arch machine.

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop; do bash -n "$script"; done
+for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop compat/broadcom/*.sh; do bash -n "$script"; done
 source source.lock
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+[[ "$SOURCE_ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}" ]]
 grep -q 'no CPU_MITIGATIONS' scripts/configure.sh
 grep -q 'no ZSWAP' scripts/configure.sh
 grep -q 'CPU_MITIGATIONS' scripts/audit-config.sh

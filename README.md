@@ -4,12 +4,12 @@
 
 One aggressively stripped, performance- and power-oriented custom Arch kernel for the late-2008 Apple MacBookPro5,1. Built in GitHub Actions with **no local WSL or Linux required**.
 
-**STATUS: experimental. The pinned kernel and matching Arch package pair compiled
-on GitHub Actions on October 25, 2026, but the initial upload was blocked by
-nonportable checksum paths. The follow-up packaging fix is being validated.
-Not yet booted or tested on the MacBook. Never install as the only bootable kernel.**
+**STATUS: experimental. Baseline kernel and Broadcom compatibility compile
+passed in hosted CI. A new source-locked Linux 7.4 development snapshot at
+21a7f44fd076 is undergoing fresh validation. No physical MacBook boot has
+yet been performed. Never install as the only bootable kernel.**
 
-Upstream is pinned to a full Git SHA in [source.lock](source.lock). At that snapshot the post-v7.3 Linux development tree still identifies itself as **7.3.0** in its Makefile. This is not a released or tagged 7.4 kernel.
+Upstream is pinned to a full Git SHA in [source.lock](source.lock). Our reviewed 7.4 development snapshot still identifies itself as **7.3.0** in its upstream Makefile, with a unique source-specific local version suffix. This is not a released or tagged 7.4 kernel.
 
 ### Tested laptop baseline
 
@@ -72,3 +72,14 @@ The on-device [Broadcom build-only helper](compat/broadcom/build-on-device.sh)
 can compile the source-locked patch in a private directory without overwriting
 the Arch-maintained Broadcom source or automatically loading the module.
 This is separate from first-boot qualification.
+
+### Reproducible Wi-Fi installation and safe first boot
+
+The patched proprietary Broadcom module can now be compiled **locally** and
+packaged as a normal, version-locked `mbp51-broadcom-wl` Arch package:
+`bash compat/broadcom/make-local-package.sh 7.3.0-mbp51-extreme-g21a7f44`.
+No vendor binary is published by our public CI. The boot image and module
+package must share the exact `kernelrelease.txt` value. Installation is
+deferred until the machine's boot partition and known-good recovery entry
+are verified; see [INSTALL.md](docs/INSTALL.md). Read-only device evidence
+is collected with `bash scripts/hardware-report.sh`.

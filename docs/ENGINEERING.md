@@ -34,7 +34,7 @@ Do not disable ACPI, S3, cpufreq, cpuidle, thermal protection or runtime PM.
 ## Source and upstream integration
 
 Pin an immutable SHA from the official torvalds/linux tree in source.lock.
-At first pin, the development branch is post-Linux 7.3 while its Makefile still
+At the current 7.4-development pin, the source is post-Linux 7.3 while its Makefile still
 states 7.3.0. Call it post-v7.3 / 7.4 development, not a 7.4 release.
 All modifications are deterministic scripts, not manual menuconfig edits.
 Kconfig script changes + final .config and compiler metadata must accompany
@@ -137,3 +137,19 @@ without assuming a driver workaround; measure overnight suspend drain and
 real battery watts; create installation-mode-specific initramfs/GRUB commands
 only after identifying the final filesystem and boot layout; verify all
 PowerTOP tunables on the MacBook. Avoid calling these items complete.
+
+## Pinned 7.4-development rollout (2026-10-25)
+
+The torvalds/linux pin is `21a7f44fd0765fcc5194130b28767786eba1d1e7`,
+with a GitHub Actions-measured source tar SHA256 stored in `source.lock`.
+The tree still reports 7.3.0, so the distinct `LOCALVERSION`
+`-mbp51-extreme-g21a7f44` is mandatory to prevent reused header/DKMS
+paths between commits. Upstream kernel config retains LZ4 zram, schedutil,
+PREEMPT_LAZY, Core 2 tuning and user-requested CPU mitigation policy.
+Avoid separately grafting 7.4 scheduler commits after updating the source pin.
+
+The Broadcom source adaptation and the ordinary Arch wl distribution package
+are separate. A local generated pacman package, never a publicly redistributed
+binary, installs the exact rebuilt `wl.ko`. Physical testing remains limited
+to a recoverable boot and explicit checks; CI cannot verify gmux, suspend,
+or battery behavior.
