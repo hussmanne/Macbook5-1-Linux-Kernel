@@ -1,0 +1,67 @@
+name: Broadcom wl DKMS compatibility
+on:
+  # Re-test against exactly the newly published kernel headers.
+  workflow_run:
+    workflows: ["Build experimental MBP5,1 kernel"]
+    types: [completed]
+  # Re-test a known, successful archived build without recompiling the kernel.
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Successful build run containing mbp51-kernel-and-headers"
+        required: true
+        type: string
+        default: "40166412535"
+  # Exercise the initial test immediately once this workflow reaches main.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/broadcom-compatibility.yml"
+      - "scripts/check-broadcom-dkms.sh"
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mbp51-broadcom-${{ github.event.workflow_run.id || inputs.run_id || '40166412535' }}
+  cancel-in-progress: false
+jobs:
+  wl-dkms:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      TARGET_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id || '40166412535' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: mbp51-kernel-and-headers
+          repository: ${{ github.repository }}
+          run-id: ${{ env.TARGET_RUN_ID }}
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Verify downloaded package hashes and pinned source
+        run: bash scripts/verify-artifacts.sh dist
+      - name: Compile maintained Arch broadcom-wl-dkms against matching headers
+        run: |
+          mkdir -p report
+          docker run --rm --pull=always \
+            -v "$PWD:/work" -w /work \
+            archlinux:base-devel bash -euc '
+              pacman -Syu --noconfirm --needed dkms broadcom-wl-dkms bc bison flex kmod libelf openssl
+              bash scripts/check-broadcom-dkms.sh /work/dist /work/report
+            '
+      - name: Publish diagnostic logs (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mbp51-broadcom-dkms-diagnostics
+          path: report/
+          if-no-files-found: warn
+          retention-days: 30

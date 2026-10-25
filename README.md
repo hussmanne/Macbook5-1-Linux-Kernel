@@ -58,3 +58,10 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
 ```
 
 Important: CI passing means packages were built and audited, **not** that Broadcom STA has compiled for them or the Mac's Nouveau, gmux, sleep, or power policy has been hardware-verified.
+
+### External Broadcom Wi-Fi compatibility
+
+After every successful kernel build, a separate read-only runner validates the
+maintained Arch `broadcom-wl-dkms` package against exactly the published kernel
+headers. This is a compile/link check, **not** a device scan or connectivity
+guarantee. See [Broadcom qualification](docs/BROADCOM.md).
