@@ -14,7 +14,8 @@ permissions:
   contents: read
 concurrency:
   group: mbp51-kernel-build
-  cancel-in-progress: false
+  # Only the newest source-pinned kernel is useful; cancel superseded builds.
+  cancel-in-progress: true
 jobs:
   compile:
     runs-on: ubuntu-24.04
