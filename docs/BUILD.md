@@ -12,8 +12,15 @@
    checks final .config with scripts/audit-config.sh, then invokes upstream
    make pacman-pkg with only kernel and headers requested.
 6. Successful artifacts include kernel package, headers package, source SHA,
-   tarball SHA256, resulting kernelrelease, resolved .config, compiler/version
-   manifest, runtime-config archive and package hashes.
+   tarball SHA256, **actual packaged** kernel release, resolved .config,
+   compiler/version manifest, runtime-config archive and portable SHA256 hashes.
+   The source archive itself is not bundled; its checksum can be used when
+   independently retrieving the pinned upstream tarball.
+7. scripts/verify-artifacts.sh validates version consistency, the exactly two
+   expected package files, portable checksum entries and package checksums.
+   scripts/test-verify-artifacts.sh tests the verifier in pull-request CI.
+   The build also inspects package contents to verify matching kernel and
+   headers ABI directories before publishing artifacts.
 
 The pinned source currently has Makefile VERSION=7, PATCHLEVEL=3, SUBLEVEL=0,
 even though it is the development tree for the next version. Do not invent 7.4

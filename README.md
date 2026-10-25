@@ -4,7 +4,10 @@
 
 One aggressively stripped, performance- and power-oriented custom Arch kernel for the late-2008 Apple MacBookPro5,1. Built in GitHub Actions with **no local WSL or Linux required**.
 
-**STATUS: experimental build infrastructure. Not yet compiled, booted or tested on the MacBook. Never install as the only bootable kernel.**
+**STATUS: experimental. The pinned kernel and matching Arch package pair compiled
+on GitHub Actions on October 25, 2026, but the initial upload was blocked by
+nonportable checksum paths. The follow-up packaging fix is being validated.
+Not yet booted or tested on the MacBook. Never install as the only bootable kernel.**
 
 Upstream is pinned to a full Git SHA in [source.lock](source.lock). At that snapshot the post-v7.3 Linux development tree still identifies itself as **7.3.0** in its Makefile. This is not a released or tagged 7.4 kernel.
 
