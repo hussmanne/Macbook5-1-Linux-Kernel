@@ -25,7 +25,7 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
 ### Build and install
 
 1. Review [Engineering specification](docs/ENGINEERING.md), [build procedure](docs/BUILD.md), and [installation/rescue instructions](docs/INSTALL.md).
-2. After merging the PR, GitHub Actions > **Build experimental MBP5,1 kernel** > **Run workflow**.
+2. After merging the PR, merging to main triggers one build automatically; GitHub Actions > **Build experimental MBP5,1 kernel** > **Run workflow** is also supported.
 3. The workflow downloads the pinned source, runs Kconfig resolution and audit, and invokes upstream kernel's maintained `make pacman-pkg` target to package both kernel and DKMS headers.
 4. Download the artifact, verify checksums, and *only then* follow the cautious manual installation procedure.
 

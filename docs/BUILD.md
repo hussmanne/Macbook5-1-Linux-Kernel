@@ -1,9 +1,10 @@
 # GitHub Actions build instructions
 
 1. The source SHA is fixed in ../source.lock; changing it requires review.
-2. Pull requests run static bash/source-lock validation only.
-3. Once merged into main, use GitHub Actions > Build experimental MBP5,1 kernel
-   > Run workflow. No local WSL, macOS or Windows compiler required.
+2. Pull requests run static bash/source-lock validation only; merge to main triggers a full build.
+3. Merging to main launches the full kernel build. You may rerun manually via
+   GitHub Actions > Build experimental MBP5,1 kernel > Run workflow.
+   No local WSL, macOS or Windows compiler required.
 4. Build job frees runner disk space, launches Arch Linux base-devel Docker,
    installs compiler/kernel dependencies, runs unprivileged scripts/build.sh.
 5. The build extracts a pinned upstream source archive, runs x86_64_defconfig,

@@ -18,6 +18,7 @@ Read docs/ENGINEERING.md and source.lock before any change.
    installation onto the MacBook from GitHub CI.
 7. Public repository: no privileged pull_request_target, no write tokens
    for untrusted changes, no automatic production publishing or merging.
+   Full kernel builds run only for trusted main-branch pushes or manual dispatch.
 8. Log source SHA, resolved .config, compiler, kernel release, and checksums.
 9. Every kernel update is a deliberate source-lock change. Tests must fail
    on missing mandatory hardware symbols, not silently default.

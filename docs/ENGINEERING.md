@@ -101,8 +101,8 @@ The Linux tree's maintained install-extmod-build script is preferred to manual
 headers assembly. Two distinct Arch packages and a resolved .config are the
 deliverables. Do not override stock 'linux' provides.
 
-Static PR CI is read-only; kernel builds are manual workflow_dispatch from
-the default branch. Do not run privileged code on untrusted public PRs or
+Static PR CI is read-only; kernel builds run on trusted pushes to main or
+manual workflow_dispatch from the default branch. Do not run privileged code on untrusted public PRs or
 automatically publish to an update channel. Never report a package as MacBook-
 validated from hosted CI. First install retains stock Arch kernel, headers,
 known-good bootloader and wired recovery. Actual test must include nouveau

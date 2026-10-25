@@ -1,6 +1,13 @@
 name: Build experimental MBP5,1 kernel
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'source.lock'
+      - 'scripts/**'
+      - 'runtime/**'
+      - '.github/workflows/build-kernel.yml'
 permissions:
   contents: read
 concurrency:
