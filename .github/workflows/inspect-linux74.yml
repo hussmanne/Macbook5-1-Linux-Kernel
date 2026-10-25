@@ -1,0 +1,24 @@
+name: Inspect pinned 7.4-development source archive
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/inspect-linux74.yml'
+permissions:
+  contents: read
+jobs:
+  fingerprint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: SHA-256 of exact upstream snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=21a7f44fd0765fcc5194130b28767786eba1d1e7
+          curl -fL --retry 8 --retry-delay 12 --retry-max-time 480 \
+            --retry-all-errors "https://codeload.github.com/torvalds/linux/tar.gz/$sha" \
+            -o upstream.tar.gz
+          printf 'VERIFIED_SOURCE_COMMIT=%s\n' "$sha"
+          printf 'VERIFIED_SOURCE_ARCHIVE_SHA256='
+          sha256sum upstream.tar.gz | cut -d' ' -f1
+          test "$(stat -c%s upstream.tar.gz)" -gt 150000000
