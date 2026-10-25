@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop compat/broadcom/*.sh; do bash -n "$script"; done
+for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop compat/broadcom/*.sh install/*.sh; do bash -n "$script"; done
 source source.lock
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]]

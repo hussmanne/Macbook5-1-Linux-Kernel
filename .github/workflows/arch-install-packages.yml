@@ -1,0 +1,50 @@
+name: Arch installer package compatibility
+on:
+  pull_request:
+    paths:
+      - 'install/**'
+      - '.github/workflows/arch-install-packages.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'install/**'
+      - '.github/workflows/arch-install-packages.yml'
+permissions:
+  contents: read
+jobs:
+  official-package-plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve entire fresh-install package list on current Arch repos
+        run: |
+          docker run --rm -v "$PWD:/work:ro" -w /work archlinux:base-devel bash -euc '
+            # Match a fully updated target, avoid partial-upgrade libelf conflicts.
+            pacman -Syu --noconfirm
+            names=()
+            collecting=false
+            while read -r first rest; do
+              if [[ "$first" == pacstrap && "$rest" == "-K /mnt "* ]]; then
+                collecting=true
+                continue
+              fi
+              if [[ "$first" == genfstab ]]; then collecting=false; fi
+              if $collecting; then
+                for package in $first $rest; do
+                  [[ "$package" =~ ^[a-zA-Z0-9_.+-]+$ ]] && names+=("$package")
+                done
+              fi
+            done < install/archiso-install.sh
+            echo "Resolving ${#names[@]} official Arch packages (no installation):"
+            printf "%s\n" "${names[@]}"
+            test "${#names[@]}" -gt 55
+            if ! pacman -Sp --noconfirm "${names[@]}" >/tmp/package-resolution.txt 2>&1; then
+              echo "Package resolution failed; full diagnostic output:"
+              cat /tmp/package-resolution.txt
+              exit 1
+            fi
+            echo "PASS: every installer package is resolvable in official Arch repositories"
+          '

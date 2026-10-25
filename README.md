@@ -83,3 +83,19 @@ package must share the exact `kernelrelease.txt` value. Installation is
 deferred until the machine's boot partition and known-good recovery entry
 are verified; see [INSTALL.md](docs/INSTALL.md). Read-only device evidence
 is collected with `bash scripts/hardware-report.sh`.
+
+### Direct SSD installation on the late-2008 MacBook
+
+A fresh Arch installation can now be bootstrapped from the **official Arch
+installer USB**, wiping the internal ADATA SU635 SSD with explicit user
+authorization. See [fresh SSD install and macOS USB flashing](docs/FRESH-ARCH-INSTALL.md).
+
+The **read-only** preflight is `bash install/archiso-install.sh --plan /dev/sda`.
+The destructive action is separate and requires both the MacBookPro5,1 +
+SU635 guard and a typed confirmation. The installer uses the stock Arch LTS
+kernel first with an LXQt/Openbox X11 desktop; once LTS works, the matching
+verified experiment is added by
+`bash install/activate-custom-kernel.sh --install dist` as a manual GRUB
+choice without changing the LTS default. Existing Arch installations should
+use [the non-destructive custom-kernel installation guide](docs/INSTALL.md)
+instead of the fresh-disk installer.
