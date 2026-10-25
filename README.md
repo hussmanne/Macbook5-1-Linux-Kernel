@@ -86,16 +86,19 @@ is collected with `bash scripts/hardware-report.sh`.
 
 ### Direct SSD installation on the late-2008 MacBook
 
-A fresh Arch installation can now be bootstrapped from the **official Arch
-installer USB**, wiping the internal ADATA SU635 SSD with explicit user
-authorization. See [fresh SSD install and macOS USB flashing](docs/FRESH-ARCH-INSTALL.md).
+**Current recommended route: EndeavourOS Titan Nova via the official Calamares
+installer.** Create the USB on Windows with Rufus in DD mode, then choose
+online installation, LXQt, GRUB, and unencrypted Btrfs to the ADATA SU635
+internal SSD. The user has approved erasing the existing APFS/macOS data.
 
-The **read-only** preflight is `bash install/archiso-install.sh --plan /dev/sda`.
-The destructive action is separate and requires both the MacBookPro5,1 +
-SU635 guard and a typed confirmation. The installer uses the stock Arch LTS
-kernel first with an LXQt/Openbox X11 desktop; once LTS works, the matching
-verified experiment is added by
-`bash install/activate-custom-kernel.sh --install dist` as a manual GRUB
-choice without changing the LTS default. Existing Arch installations should
-use [the non-destructive custom-kernel installation guide](docs/INSTALL.md)
-instead of the fresh-disk installer.
+After first boot into EndeavourOS, install and verify the regular LTS
+kernel as an independent fallback, and then use the new **EndeavourOS
+dracut activation helper** to install our separately compiled
+7.4-development kernel and the locally adapted proprietary Broadcom module.
+See [EndeavourOS installation and custom-kernel handoff](docs/ENDEAVOUROS-INSTALL.md).
+
+A custom **vanilla Arch ISO** automation remains available as an alternative
+at [fresh Arch installation](docs/FRESH-ARCH-INSTALL.md) and
+`install/archiso-install.sh`, but its mkinitcpio-oriented activation
+helper is **not** appropriate for EndeavourOS's default dracut setup.
+No experimental kernel has been physically booted on the MacBook yet.
