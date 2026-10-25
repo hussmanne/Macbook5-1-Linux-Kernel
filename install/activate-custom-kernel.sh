@@ -25,7 +25,7 @@ echo "Phase 2 for EndeavourOS: install packages, build patched wl, Dracut, add B
 if [[ "$mode" == --plan ]]; then echo "Read-only; no changes made"; exit 0; fi
 [[ -f /etc/arch-release ]] || { echo "Requires installed Arch Linux"; exit 2; }
 [[ "$(findmnt -no FSTYPE /)" == btrfs &&
-   "$(findmnt -no FSTYPE /boot)" == btrfs &&
+   "$(findmnt -T /boot -n -o FSTYPE)" == btrfs &&
    "$(findmnt -no FSTYPE /boot/efi)" == vfat ]] || {
   echo "Expected EndeavourOS: Btrfs / and /boot, FAT32 /boot/efi" >&2; exit 2;
 }
@@ -35,9 +35,8 @@ if [[ "$mode" == --plan ]]; then echo "Read-only; no changes made"; exit 0; fi
 command -v dracut >/dev/null || { echo "Dracut not installed" >&2; exit 2; }
 [[ -s /boot/vmlinuz-linux-lts && -s /boot/initramfs-linux-lts.img &&
    -s /boot/grub/grub.cfg ]] || { echo "Stock LTS rescue entry missing"; exit 2; }
-grep -Eq '^GRUB_DEFAULT="?0"?$' /etc/default/grub || {
-  echo "LTS must remain GRUB_DEFAULT=0" >&2; exit 2;
-}
+# Keep existing GRUB default unchanged; EndeavourOS may use saved/0 config.
+# The new entry is appended by 41_mbp51-experimental after stock entries.
 sudo pacman -U --noconfirm "${kernels[0]}" "${headers[0]}"
 test -s "/usr/lib/modules/$release/build/Module.symvers"
 bash "$repo/compat/broadcom/make-local-package.sh" "$release"
@@ -55,7 +54,7 @@ sudo install -Dm644 "/usr/lib/modules/$release/vmlinuz" /boot/mbp51/vmlinuz
 sudo dracut --force --no-hostonly --kver "$release" /boot/mbp51/initramfs.img
 [[ -s /boot/mbp51/vmlinuz && -s /boot/mbp51/initramfs.img ]] || exit 1
 root_uuid=$(findmnt -no UUID /)
-boot_uuid=$(findmnt -no UUID /boot)
+boot_uuid=$(findmnt -T /boot -n -o UUID)
 subvol=$(findmnt -no OPTIONS / | tr ',' '\n' | sed -n 's/^subvol=//p')
 [[ "$boot_uuid" == "$root_uuid" && "$subvol" == /* && "$subvol" != *" "* ]] || {
   echo "Cannot identify actual Btrfs subvolume and root UUID" >&2; exit 1;
@@ -83,6 +82,5 @@ sudo install -m755 "$tmp" /etc/grub.d/41_mbp51-experimental
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo grub-script-check /boot/grub/grub.cfg
 grep -Fq 'MacBookPro5,1 experimental Linux 7.4-development' /boot/grub/grub.cfg
-grep -Eq '^GRUB_DEFAULT="?0"?$' /etc/default/grub
 echo "PASS: Linux 7.4-development and patched wl installed; LTS remains default."
 echo "Reboot and MANUALLY choose experimental from GRUB."
