@@ -35,6 +35,13 @@ if [[ "$mode" == --plan ]]; then echo "Read-only; no changes made"; exit 0; fi
 command -v dracut >/dev/null || { echo "Dracut not installed" >&2; exit 2; }
 [[ -s /boot/vmlinuz-linux-lts && -s /boot/initramfs-linux-lts.img &&
    -s /boot/grub/grub.cfg ]] || { echo "Stock LTS rescue entry missing"; exit 2; }
+# GRUB index zero selects the new custom kernel because it sorts ahead of LTS.
+# Refuse to install until stock LTS is the explicitly selected default.
+grep -Eq '^GRUB_DEFAULT=.*gnulinux-advanced-.*>gnulinux-linux-lts-advanced-' /etc/default/grub || {
+  echo "Set GRUB_DEFAULT to the explicit advanced/linux-lts menu ID before installing." >&2
+  echo "Check: sudo grep -E '^[[:space:]]*(menuentry|submenu) ' /boot/grub/grub.cfg" >&2
+  exit 2
+}
 # Keep existing GRUB default unchanged; EndeavourOS may use saved/0 config.
 # The new entry is appended by 41_mbp51-experimental after stock entries.
 sudo pacman -U --noconfirm "${kernels[0]}" "${headers[0]}"
@@ -47,12 +54,21 @@ modules=("$pkgdir"/mbp51-broadcom-wl-*.pkg.tar.zst)
 sudo pacman -U --noconfirm "${modules[0]}"
 sudo depmod -a "$release"
 actual=$(modinfo -k "$release" -n wl)
-[[ "$actual" == "/usr/lib/modules/$release/updates/mbp51/wl.ko" ]] || {
-  echo "Wrong selected wl module: $actual"; exit 1;
+expected="/usr/lib/modules/$release/updates/mbp51/wl.ko"
+# EndeavourOS may report /lib instead of its canonical /usr/lib symlink target.
+[[ -f "$actual" && "$(readlink -f "$actual")" == "$(readlink -f "$expected")" ]] || {
+  echo "Wrong selected wl module: $actual (expected $expected)" >&2; exit 1;
+}
+vermagic=$(modinfo -k "$release" -F vermagic wl)
+[[ "$vermagic" == "$release "* ]] || {
+  echo "Wrong wl vermagic: $vermagic" >&2; exit 1;
 }
 sudo install -Dm644 "/usr/lib/modules/$release/vmlinuz" /boot/mbp51/vmlinuz
-sudo dracut --force --no-hostonly --kver "$release" /boot/mbp51/initramfs.img
-[[ -s /boot/mbp51/vmlinuz && -s /boot/mbp51/initramfs.img ]] || exit 1
+# Host-only primary shrinks startup image. Preserve a generic recovery initramfs.
+sudo dracut --force --hostonly --kver "$release" /boot/mbp51/initramfs.img
+sudo dracut --force --no-hostonly --kver "$release" /boot/mbp51/initramfs-fallback.img
+[[ -s /boot/mbp51/vmlinuz && -s /boot/mbp51/initramfs.img &&
+   -s /boot/mbp51/initramfs-fallback.img ]] || exit 1
 root_uuid=$(findmnt -no UUID /)
 boot_uuid=$(findmnt -T /boot -n -o UUID)
 subvol=$(findmnt -no OPTIONS / | tr ',' '\n' | sed -n 's/^subvol=//p')
@@ -69,18 +85,25 @@ cat > "$tmp" <<EOF
 #!/bin/sh
 # Deliberately after 10_linux; LTS stays GRUB_DEFAULT=0.
 cat <<'MBP51_GRUB'
-menuentry 'MacBookPro5,1 experimental Linux 7.4-development' --id=mbp51-experimental {
+menuentry 'MacBookPro5,1 experimental Linux 7.4-development v2' --id=mbp51-experimental-v2 {
   insmod part_gpt
   insmod btrfs
   search --no-floppy --fs-uuid --set=root $boot_uuid
   linux $subvol/boot/mbp51/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
   initrd $subvol/boot/mbp51/initramfs.img
 }
+menuentry 'MacBookPro5,1 experimental Linux 7.4-development v2 (generic fallback)' --id=mbp51-experimental-v2-fallback {
+  insmod part_gpt
+  insmod btrfs
+  search --no-floppy --fs-uuid --set=root $boot_uuid
+  linux $subvol/boot/mbp51/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
+  initrd $subvol/boot/mbp51/initramfs-fallback.img
+}
 MBP51_GRUB
 EOF
 sudo install -m755 "$tmp" /etc/grub.d/41_mbp51-experimental
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo grub-script-check /boot/grub/grub.cfg
-grep -Fq 'MacBookPro5,1 experimental Linux 7.4-development' /boot/grub/grub.cfg
-echo "PASS: Linux 7.4-development and patched wl installed; LTS remains default."
+sudo grep -Fq 'MacBookPro5,1 experimental Linux 7.4-development v2' /boot/grub/grub.cfg
+echo "PASS: Linux 7.4-development v2 and patched wl installed; explicit LTS default retained."
 echo "Reboot and MANUALLY choose experimental from GRUB."

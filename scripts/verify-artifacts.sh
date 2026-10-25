@@ -9,8 +9,8 @@ for f in kernelrelease.txt build-manifest.txt resolved.config packages.sha256; d
 done
 release=$(< "$dist/kernelrelease.txt")
 source "$root/source.lock"
-[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}" ]] || { echo "Source-specific ABI invalid" >&2; exit 1; }
-[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*-mbp51-extreme-g[0-9a-f]{8}$ &&
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2" ]] || { echo "Source-specific ABI invalid" >&2; exit 1; }
+[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*-mbp51-extreme-g[0-9a-f]{8}-v2$ &&
    "$release" == *"$KERNEL_LOCALVERSION" ]] || {
   echo "Unexpected kernel release: $release" >&2; exit 1;
 }
