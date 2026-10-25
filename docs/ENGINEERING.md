@@ -47,9 +47,12 @@ with tick/preemption choices inspired by low-latency kernel builds.
 
 Generic x86-64 GCC output at first: Intel Penryn cannot run x86-64-v2/v3
 binaries. Avoid blindly using -march=native from a newer CI CPU or -O3.
-Target CONFIG_HZ_500, CONFIG_NO_HZ_IDLE, CONFIG_PREEMPT_DYNAMIC (where
-supported) and the regular upstream scheduler. Preserve high-resolution
-timers, SMP, ACPI CPU_FREQ, CPU_IDLE and thermal management.
+Prefer CONFIG_HZ_500 if upstream provides it. The pinned source does not:
+it offers 100/250/300/1000 Hz, so the current build selects 1000 Hz for
+interactive responsiveness, with NO_HZ_IDLE to suppress periodic idle ticks.
+This is an explicit compromise, not evidence of better battery runtime.
+Require PREEMPT_DYNAMIC and the regular upstream scheduler. Preserve
+high-resolution timers, SMP, ACPI CPU_FREQ, CPU_IDLE and thermal management.
 
 Strip unused DRM families, unrelated WLAN stacks, nonapplicable server buses,
 virtualization host features, debug info, BTF, KASAN/KCSAN/UBSAN, heavy lock
