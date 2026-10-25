@@ -9,15 +9,27 @@ work="$root/.work"
 out="$root/dist"
 mkdir -p "$work" "$out"
 archive="$work/linux-$SOURCE_SHA.tar.gz"
-if [[ ! -s "$archive" ]]; then
-  curl -fL --retry 5 --retry-all-errors \
-    "https://codeload.github.com/torvalds/linux/tar.gz/$SOURCE_SHA" -o "$archive"
+cached="$root/.cache/kconfig/linux-$SOURCE_SHA.tar.gz"
+# PR/main static validation has already independently fetched and SHA-verified
+# this source. Reuse the same immutable blob to avoid GitHub codeload rate limits.
+if [[ -s "$cached" ]]; then
+  if printf '%s  %s\n' "$SOURCE_ARCHIVE_SHA256" "$cached" | sha256sum -c -; then
+    echo "Restoring hash-verified kernel source from Actions cache."
+    cp -f "$cached" "$archive"
+  else
+    echo "Ignoring cached archive with mismatching SHA-256." >&2
+  fi
 fi
-# Use portable filenames in provenance manifests, not container-only absolute paths.
-archive_sha256=$(sha256sum "$archive" | cut -d' ' -f1)
-[[ "$archive_sha256" == "$SOURCE_ARCHIVE_SHA256" ]] || {
-  echo "Upstream archive SHA256 differs from source.lock" >&2; exit 1;
-}
+# Always validate the work archive before unpacking, including preexisting files.
+if [[ ! -s "$archive" ]] || ! printf '%s  %s\n' "$SOURCE_ARCHIVE_SHA256" "$archive" | sha256sum -c -; then
+  rm -f "$archive" "$archive.tmp"
+  echo "No valid cached archive. Downloading pinned upstream SHA with backoff."
+  curl -fL --retry 8 --retry-delay 12 --retry-max-time 600 --retry-all-errors \
+    "https://codeload.github.com/torvalds/linux/tar.gz/$SOURCE_SHA" -o "$archive.tmp"
+  printf '%s  %s\n' "$SOURCE_ARCHIVE_SHA256" "$archive.tmp" | sha256sum -c -
+  mv "$archive.tmp" "$archive"
+fi
+archive_sha256="$SOURCE_ARCHIVE_SHA256"
 printf '%s  %s\n' "$archive_sha256" "$(basename "$archive")" > "$out/source-archive.sha256"
 tar -xzf "$archive" -C "$work"
 src="$work/linux-$SOURCE_SHA"
