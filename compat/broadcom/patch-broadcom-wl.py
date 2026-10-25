@@ -14,11 +14,11 @@ if len(sys.argv) != 4:
 src, release, report = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 report.mkdir(parents=True, exist_ok=True)
 root = Path(__file__).resolve().parents[2]
-locked_sha = "330517c63aa9b48227b6ab45f01003effac77ae4"
+locked_sha = "21a7f44fd0765fcc5194130b28767786eba1d1e7"
 if "SOURCE_SHA=" + locked_sha not in (root / "source.lock").read_text():
     sys.exit("Pinned source moved; review driver compatibility before updating")
-if release != "7.3.0-mbp51-extreme":
-    sys.exit("Unsupported target release: " + release)
+if release != "7.3.0-mbp51-extreme-g" + locked_sha[:8]:
+    sys.exit("Unsupported locked development-kernel release: " + release)
 changes = []
 
 def exact(path, old, new, count):

@@ -46,7 +46,7 @@ count=$(find "$out" -maxdepth 1 -name '*.pkg.tar.zst' -type f | wc -l)
 # generated release the packaging step actually installed its modules under.
 [[ -s include/config/kernel.release ]] || { echo "Missing built kernel release" >&2; exit 1; }
 release=$(< include/config/kernel.release)
-[[ "$release" == *-mbp51-extreme ]] || { echo "Unexpected built release: $release" >&2; exit 1; }
+[[ "$release" == *"$KERNEL_LOCALVERSION" ]] || { echo "Unexpected built release: $release" >&2; exit 1; }
 printf '%s\n' "$release" > "$out/kernelrelease.txt"
 printf 'source_commit=%s\nkernel_release=%s\nsource_archive_sha256=%s\n' \
   "$SOURCE_SHA" "$release" "$archive_sha256" > "$out/build-manifest.txt"

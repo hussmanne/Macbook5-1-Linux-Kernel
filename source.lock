@@ -1,5 +1,6 @@
-# Linux upstream master snapshot, 2026-10-25; post-v7.3 merge window.
-# Source Makefile still says 7.3.0, not released 7.4.
-SOURCE_SHA=330517c63aa9b48227b6ab45f01003effac77ae4
-SOURCE_ARCHIVE_SHA256=78a0421fd50f21867098f4626c4a8beb64b639b704a34556ca16eb652ba21e2b
+# 7.4 development merge-window snapshot; upstream Makefile still says 7.3.0.
+# Immutable commit and Actions-measured codeload archive checksum, 2026-10-25.
+SOURCE_SHA=21a7f44fd0765fcc5194130b28767786eba1d1e7
+SOURCE_ARCHIVE_SHA256=1af6d999723ab2309946456e6a38953583a087c720be98295224e3ddbb384295
 SOURCE_REPO=https://github.com/torvalds/linux
+KERNEL_LOCALVERSION=-mbp51-extreme-g21a7f44f

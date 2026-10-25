@@ -4,9 +4,9 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 temp=$(mktemp -d)
 trap 'rm -rf "$temp"' EXIT
-release=7.3.0-mbp51-extreme
-version=7.3.0_mbp51_extreme
 source "$root/source.lock"
+release="7.3.0$KERNEL_LOCALVERSION"
+version="${release//-/_}"
 printf '%s\n' "$release" > "$temp/kernelrelease.txt"
 printf 'source_commit=%s\nkernel_release=%s\n' "$SOURCE_SHA" "$release" > "$temp/build-manifest.txt"
 echo 'CONFIG_CPU_MITIGATIONS=n' > "$temp/resolved.config"

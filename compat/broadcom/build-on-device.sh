@@ -5,9 +5,10 @@
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 release=${1:-}
-if [[ $# -ne 1 || ! "$release" =~ ^[0-9A-Za-z._+-]+-mbp51-extreme$ ]]; then
+source "$root/source.lock"
+if [[ $# -ne 1 || "$release" != "7.3.0$KERNEL_LOCALVERSION" ]]; then
   echo "Usage: bash compat/broadcom/build-on-device.sh KERNELRELEASE" >&2
-  echo "Example: bash compat/broadcom/build-on-device.sh 7.3.0-mbp51-extreme" >&2
+  echo "Expected: bash compat/broadcom/build-on-device.sh 7.3.0$KERNEL_LOCALVERSION" >&2
   exit 2
 fi
 if [[ "$EUID" -eq 0 ]]; then

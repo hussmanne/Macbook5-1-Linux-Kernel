@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+source "$root/source.lock"
 config="$1"
 [[ -s "$config" ]] || { echo "Missing resolved .config" >&2; exit 2; }
 fail=0
@@ -47,5 +49,6 @@ for s in APPLE_GMUX USB_HID; do expect "$s" any; done
 expect ZRAM_BACKEND_LZO n
 expect ZRAM_DEF_COMP '"lz4"'
 expect NR_CPUS 2
+expect LOCALVERSION "\"$KERNEL_LOCALVERSION\""
 [[ "$fail" == 0 ]] || { echo "Kconfig audit FAILED" >&2; exit 1; }
 echo "Kconfig audit passed."

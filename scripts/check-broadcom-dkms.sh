@@ -61,3 +61,16 @@ grep -Fq "$release" "$report/vermagic.txt" || {
   echo "Built wl.ko vermagic doesn't match custom kernel" >&2; exit 1;
 }
 echo "PASS: Broadcom wl DKMS builds for $release ($wl_ver)"
+
+# Prove a pacman-installable module can be generated without distributing the
+# proprietary driver in a public CI artifact. Only log package name/hash.
+useradd -m -u 1000 mbp51pack
+mkdir -p "$root/.work"
+chown -R mbp51pack:mbp51pack "$root/.work"
+runuser -u mbp51pack -- bash "$root/compat/broadcom/make-local-package.sh" "$release" "${modules[0]}"
+pkg="$root/.work/broadcom/$release/package/mbp51-broadcom-wl-${release//-/_}-1-x86_64.pkg.tar.zst"
+[[ -s "$pkg" ]] || { echo "Local module package absent" >&2; exit 1; }
+pacman -Qip "$pkg" > "$report/module-package-metadata.txt"
+printf '\nPackage SHA-256: ' >> "$report/module-package-metadata.txt"
+sha256sum "$pkg" | cut -d' ' -f1 >> "$report/module-package-metadata.txt"
+echo "PASS: local pacman package created and verified; no binary redistributed"
