@@ -5,7 +5,7 @@
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 release=${1:-}
-source "$root/source.lock"
+source "$root/scripts/tier-profile.sh"
 if [[ $# -ne 1 || "$release" != "7.3.0$KERNEL_LOCALVERSION" ]]; then
   echo "Usage: bash compat/broadcom/build-on-device.sh KERNELRELEASE" >&2
   echo "Expected: bash compat/broadcom/build-on-device.sh 7.3.0$KERNEL_LOCALVERSION" >&2

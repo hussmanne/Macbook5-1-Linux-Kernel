@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-source "$root/source.lock"
+source "$root/scripts/tier-profile.sh"
 config="$1"
 [[ -s "$config" ]] || { echo "Missing resolved .config" >&2; exit 2; }
 fail=0

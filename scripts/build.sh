@@ -3,10 +3,11 @@
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-source source.lock
+source "$root/scripts/tier-profile.sh"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid source SHA" >&2; exit 2; }
 work="$root/.work"
 out="$root/dist"
+[[ "$MBP51_TIER" != legacy ]] && out="$root/dist/$MBP51_TIER"
 mkdir -p "$work" "$out"
 archive="$work/linux-$SOURCE_SHA.tar.gz"
 cached="$root/.cache/kconfig/linux-$SOURCE_SHA.tar.gz"
@@ -42,7 +43,7 @@ bash "$root/scripts/audit-config.sh" "$src/.config"
 cp .config "$out/resolved.config"
 
 # Use upstream's maintained Arch packaging, including correct DKMS header tree.
-export PACMAN_PKGBASE=linux-mbp51-extreme
+export PACMAN_PKGBASE="$MBP51_PKGBASE"
 export PACMAN_EXTRAPACKAGES=headers
 export MAKEPKGOPTS="--nodeps --noconfirm"
 # Scheduler tuning only; -mtune=core2 does NOT enable newer CPU instructions
@@ -62,12 +63,13 @@ release=$(< include/config/kernel.release)
 printf '%s\n' "$release" > "$out/kernelrelease.txt"
 printf 'source_commit=%s\nkernel_release=%s\nsource_archive_sha256=%s\n' \
   "$SOURCE_SHA" "$release" "$archive_sha256" > "$out/build-manifest.txt"
-printf 'kernel_tuning_flags=%s\n' "$KCFLAGS" >> "$out/build-manifest.txt"
+printf 'kernel_tuning_flags=%s\nkernel_tier=%s\npkgbase=%s\n' \
+  "$KCFLAGS" "$MBP51_TIER" "$MBP51_PKGBASE" >> "$out/build-manifest.txt"
 gcc --version | head -n 1 >> "$out/build-manifest.txt"
 
 # Ensure that headers and bootable image use exactly the same module ABI path.
-kernel_pkg=("$out"/linux-mbp51-extreme-[0-9]*-x86_64.pkg.tar.zst)
-headers_pkg=("$out"/linux-mbp51-extreme-headers-[0-9]*-x86_64.pkg.tar.zst)
+kernel_pkg=("$out"/"$MBP51_PKGBASE"-[0-9]*-x86_64.pkg.tar.zst)
+headers_pkg=("$out"/"$MBP51_PKGBASE"-headers-[0-9]*-x86_64.pkg.tar.zst)
 [[ "${#kernel_pkg[@]}" -eq 1 && -f "${kernel_pkg[0]}" ]] || { echo "Wrong kernel package count" >&2; exit 1; }
 [[ "${#headers_pkg[@]}" -eq 1 && -f "${headers_pkg[0]}" ]] || { echo "Wrong headers package count" >&2; exit 1; }
 bsdtar -tf "${kernel_pkg[0]}" | grep -Fx "usr/lib/modules/$release/vmlinuz" >/dev/null || \

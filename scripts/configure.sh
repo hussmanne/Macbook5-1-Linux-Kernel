@@ -3,8 +3,7 @@
 set -euo pipefail
 [[ $# -eq 1 && -f "$1/scripts/config" ]] || { echo "Usage: $0 /path/to/linux" >&2; exit 2; }
 root=$(cd "$(dirname "$0")/.." && pwd)
-source "$root/source.lock"
-[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2" ]] || exit 2
+source "$root/scripts/tier-profile.sh"
 cd "$1"
 config=./scripts/config
 yes() { "$config" --enable "$1"; }

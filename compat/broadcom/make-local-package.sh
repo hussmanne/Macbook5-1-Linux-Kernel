@@ -4,7 +4,7 @@
 # This does not install, load, or overwrite any running stock-kernel module.
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$root/source.lock"
+source "$root/scripts/tier-profile.sh"
 release=${1:-}
 [[ "$EUID" -ne 0 ]] || { echo "Run as a regular user, never root." >&2; exit 2; }
 [[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
@@ -33,14 +33,14 @@ cp "$module" "$stage/wl.ko"
 module_hash=$(sha256sum "$stage/wl.ko" | cut -d' ' -f1)
 cat > "$stage/PKGBUILD" <<'PKGBUILD'
 # This build is generated locally; its wl.ko contains proprietary Broadcom code.
-pkgname=mbp51-broadcom-wl
+pkgname=@@WL_PKGNAME@@
 pkgver=@@VERSION@@
 pkgrel=1
 pkgdesc='Locally built BCM4322 wl driver for pinned MacBookPro5,1 kernel'
 arch=('x86_64')
 url='https://github.com/hussmanne/Macbook5-1-Linux-Kernel'
 license=('custom')
-depends=('linux-mbp51-extreme' 'kmod')
+depends=('@@KERNEL_PKGBASE@@' 'kmod')
 source=('wl.ko')
 sha256sums=('@@SHA256@@')
 options=('!strip' '!debug')
@@ -48,12 +48,14 @@ package() {
   install -Dm644 "$srcdir/wl.ko" "$pkgdir/usr/lib/modules/@@RELEASE@@/updates/mbp51/wl.ko"
 }
 PKGBUILD
-sed -i -e "s/@@VERSION@@/$pkgver/" \
+sed -i -e "s/@@WL_PKGNAME@@/$MBP51_WL_PKGNAME/" \
+       -e "s/@@KERNEL_PKGBASE@@/$MBP51_PKGBASE/" \
+       -e "s/@@VERSION@@/$pkgver/" \
        -e "s/@@SHA256@@/$module_hash/" \
        -e "s/@@RELEASE@@/$release/" "$stage/PKGBUILD"
 (cd "$stage" && makepkg --noconfirm --force --nodeps --cleanbuild)
 shopt -s nullglob
-packages=("$stage"/mbp51-broadcom-wl-"$pkgver"-*-x86_64.pkg.tar.zst)
+packages=("$stage"/"$MBP51_WL_PKGNAME"-"$pkgver"-*-x86_64.pkg.tar.zst)
 [[ ${#packages[@]} -eq 1 && -s "${packages[0]}" ]] || {
   echo "Missing locally built module package" >&2; exit 1;
 }
