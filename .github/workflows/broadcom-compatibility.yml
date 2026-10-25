@@ -47,6 +47,8 @@ jobs:
           run-id: ${{ env.TARGET_RUN_ID }}
           github-token: ${{ github.token }}
           path: dist
+      - name: Syntax-check local build-only helper
+        run: bash -n compat/broadcom/build-on-device.sh
       - name: Verify downloaded package hashes and pinned source
         run: bash scripts/verify-artifacts.sh dist
       - name: Compile maintained Arch broadcom-wl-dkms against matching headers
