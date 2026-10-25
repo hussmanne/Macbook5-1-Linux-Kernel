@@ -35,7 +35,7 @@ def exact(path, old, new, count):
 exact("src/wl/sys/wl_cfg80211_hybrid.c",
       "u8 key_idx, bool pairwise,",
       "u8 key_idx, enum nl80211_key_type type,",
-      6)
+      18)
 
 # The ndo_do_ioctl hook is no longer in struct net_device_ops in this commit.
 f = src / "src/wl/sys/wl_linux.c"
