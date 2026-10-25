@@ -6,6 +6,8 @@ on:
     paths:
       - 'source.lock'
       - 'scripts/**'
+      # The independent DKMS test must not trigger a 20-minute kernel rebuild.
+      - '!scripts/check-broadcom-dkms.sh'
       - 'runtime/**'
       - '.github/workflows/build-kernel.yml'
 permissions:
