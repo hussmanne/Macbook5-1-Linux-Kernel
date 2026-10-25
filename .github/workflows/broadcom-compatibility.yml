@@ -54,7 +54,7 @@ jobs:
           docker run --rm --pull=always \
             -v "$PWD:/work" -w /work \
             archlinux:base-devel bash -euc '
-              pacman -Syu --noconfirm --needed dkms broadcom-wl-dkms bc bison flex kmod libelf openssl
+              pacman -Syu --noconfirm --needed dkms broadcom-wl-dkms bc bison flex kmod libelf openssl python
               bash scripts/check-broadcom-dkms.sh /work/dist /work/report
             '
       - name: Publish diagnostic logs (even on failure)

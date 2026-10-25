@@ -6,7 +6,7 @@ source "$root/source.lock"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid source SHA" >&2; exit 2; }
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-curl -fL --retry 5 --retry-all-errors \
+curl -fL --retry 8 --retry-delay 10 --retry-max-time 300 --retry-all-errors \
   "https://codeload.github.com/torvalds/linux/tar.gz/$SOURCE_SHA" -o "$tmp/linux.tar.gz"
 sha256sum "$tmp/linux.tar.gz"
 tar -xzf "$tmp/linux.tar.gz" -C "$tmp"
