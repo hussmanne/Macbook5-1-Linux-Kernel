@@ -31,7 +31,8 @@ successful boot on the actual MacBook.
   SND_HDA_CODEC_REALTEK, SND_HDA_GENERIC and SND_USB_AUDIO.
 - Build ACPI_SBS module as a hardware diagnostic option; retain applesmc,
   dual Nouveau GPUs, Apple gmux, Ethernet, FireWire, suspend and sensors.
-- Drop CGROUP_DEBUG and AMD P-state code. Keep RCU, CPU idle, schedutil,
+- Drop CGROUP_DEBUG; upstream presently resolves AMD P-state=y and cannot
+  be disabled via scripts/config (harmless on Penryn). Keep RCU, CPU idle, schedutil,
   preemption, LZ4 ZRAM, Btrfs, CPU mitigations policy, and 1000Hz default.
 - CI must resolve pinned Kconfig and fail for non-matching symbols; main
   kernel build must provide exact release ABI, headers and checksums.

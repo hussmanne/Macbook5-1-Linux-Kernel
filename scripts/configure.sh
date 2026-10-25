@@ -35,10 +35,10 @@ yes DRM
 yes BT
 yes FIREWIRE
 # The MCP79 controller requires an actual codec driver for internal audio.
-yes SND_HDA_GENERIC
-# Eliminate unused debug and AMD-specific power-management code.
+mod SND_HDA_GENERIC
+# Remove unneeded cgroup debugging. AMD P-state is selected by upstream
+# processor Kconfig even on Intel builds; it cannot be disabled here.
 no CGROUP_DEBUG
-no X86_AMD_PSTATE
 if grep -q '^config HZ_500$' kernel/Kconfig.hz; then
   yes HZ_500
   "$config" --set-val HZ 500
