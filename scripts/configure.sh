@@ -2,6 +2,9 @@
 # Deterministic hardware-specific kernel configuration. Audit after olddefconfig.
 set -euo pipefail
 [[ $# -eq 1 && -f "$1/scripts/config" ]] || { echo "Usage: $0 /path/to/linux" >&2; exit 2; }
+root=$(cd "$(dirname "$0")/.." && pwd)
+source "$root/source.lock"
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}" ]] || exit 2
 cd "$1"
 config=./scripts/config
 yes() { "$config" --enable "$1"; }
@@ -51,7 +54,7 @@ yes CC_OPTIMIZE_FOR_PERFORMANCE
 no NO_HZ_FULL
 no HIBERNATION
 no ZSWAP  # Prevent duplicate compressed-swap layers; zram-generator owns LZ4 swap.
-"$config" --set-str LOCALVERSION "-mbp51-extreme"
+"$config" --set-str LOCALVERSION "$KERNEL_LOCALVERSION"
 no LOCALVERSION_AUTO
 
 # User-directed security trade-off: optional speculative CPU mitigations excluded.

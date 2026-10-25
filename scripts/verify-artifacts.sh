@@ -8,7 +8,10 @@ for f in kernelrelease.txt build-manifest.txt resolved.config packages.sha256; d
   [[ -s "$dist/$f" ]] || { echo "Missing or empty artifact: $f" >&2; exit 1; }
 done
 release=$(< "$dist/kernelrelease.txt")
-[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*-mbp51-extreme$ ]] || {
+source "$root/source.lock"
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}" ]] || { echo "Source-specific ABI invalid" >&2; exit 1; }
+[[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*-mbp51-extreme-g[0-9a-f]{8}$ &&
+   "$release" == *"$KERNEL_LOCALVERSION" ]] || {
   echo "Unexpected kernel release: $release" >&2; exit 1;
 }
 grep -Fxq "kernel_release=$release" "$dist/build-manifest.txt" || {
