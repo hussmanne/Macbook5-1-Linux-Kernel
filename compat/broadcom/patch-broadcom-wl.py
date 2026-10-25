@@ -46,6 +46,14 @@ if count != 2:
 f.write_text(updated)
 changes.append(f"src/wl/sys/wl_linux.c removed_callbacks={count}")
 
+# Modern Linux rejects flush_scheduled_work() on a system-wide queue.
+# The existing wl_down wait loop still calls schedule(); follow the
+# maintained Debian/RPMFusion approach and remove the global flush.
+exact("src/wl/sys/wl_linux.c",
+      "flush_scheduled_work();",
+      "/* legacy global workqueue flush removed; schedule() remains */",
+      1)
+
 # Keep the intended shim while avoiding macro-redefinition warnings.
 exact("src/wl/sys/wl_iw.h",
       "#define isprint(c) bcm_isprint(c)",
