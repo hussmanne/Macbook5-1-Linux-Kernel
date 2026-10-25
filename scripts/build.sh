@@ -15,6 +15,9 @@ if [[ ! -s "$archive" ]]; then
 fi
 # Use portable filenames in provenance manifests, not container-only absolute paths.
 archive_sha256=$(sha256sum "$archive" | cut -d' ' -f1)
+[[ "$archive_sha256" == "$SOURCE_ARCHIVE_SHA256" ]] || {
+  echo "Upstream archive SHA256 differs from source.lock" >&2; exit 1;
+}
 printf '%s  %s\n' "$archive_sha256" "$(basename "$archive")" > "$out/source-archive.sha256"
 tar -xzf "$archive" -C "$work"
 src="$work/linux-$SOURCE_SHA"
