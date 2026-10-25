@@ -16,6 +16,7 @@ jobs:
         run: |
           bash scripts/lint.sh
           bash scripts/test-verify-artifacts.sh
+          bash -n install/activate-endeavouros-kernel.sh
 
   kconfig:
     runs-on: ubuntu-24.04
