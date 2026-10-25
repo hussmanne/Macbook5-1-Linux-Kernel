@@ -76,7 +76,7 @@ pacstrap -K /mnt \
  lightdm lightdm-gtk-greeter xdg-user-dirs xdg-utils \
  pipewire pipewire-alsa pipewire-pulse wireplumber alsa-utils pavucontrol-qt \
  bluez bluez-utils blueman acpi upower lm_sensors smartmontools \
- systemd-zram-generator powertop firefox noto-fonts ttf-dejavu
+ zram-generator powertop firefox noto-fonts ttf-dejavu
 genfstab -U /mnt > /mnt/etc/fstab
 echo mbp51 > /mnt/etc/hostname
 printf '127.0.0.1 localhost\n::1 localhost\n127.0.1.1 mbp51.localdomain mbp51\n' > /mnt/etc/hosts
