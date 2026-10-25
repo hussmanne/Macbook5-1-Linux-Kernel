@@ -1,0 +1,59 @@
+name: Build EndeavourOS USB with preloaded MBP51 kernel
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-mbp51-usb.yml'
+      - 'iso/**'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: mbp51-custom-usb
+  cancel-in-progress: true
+jobs:
+  remix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reclaim disk and install ISO tool
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xorriso
+          df -h .
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 40182567735
+          name: mbp51-kernel-and-headers
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: payload/dist
+      - name: Verify kernel and headers
+        run: bash scripts/verify-artifacts.sh payload/dist
+      - name: Download and verify official EndeavourOS ISO
+        run: |
+          mkdir -p payload/original
+          curl -fL --retry 8 --retry-delay 10 --retry-all-errors --connect-timeout 30 \
+            https://mirrors.gigenet.com/endeavouros/iso/EndeavourOS_Titan-Nova-2026.08.15.iso \
+            -o payload/original/EndeavourOS_Titan-Nova-2026.08.15.iso
+          echo '3f83bd745e9d5d518bdf6fc9a24092fb5347da449a6e109c6572bf999097b8b548c4cf1848fdfb3c7c2823f558c3f5b51a127060d9c5b81b9ad89b4041bee7fa  payload/original/EndeavourOS_Titan-Nova-2026.08.15.iso' | sha512sum -c -
+      - name: Add kernel bundle without changing live kernel
+        env:
+          DIST_DIR: ${{ github.workspace }}/payload/dist
+          ORIGINAL_ISO: ${{ github.workspace }}/payload/original/EndeavourOS_Titan-Nova-2026.08.15.iso
+          OUTPUT_DIR: ${{ runner.temp }}/mbp51-iso
+        run: bash iso/remaster-with-kernel.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EndeavourOS-Titan-Nova-MBP51-USB
+          path: |
+            ${{ runner.temp }}/mbp51-iso/*.iso
+            ${{ runner.temp }}/mbp51-iso/custom-iso.sha256
+            ${{ runner.temp }}/mbp51-iso/RELEASE-NOTES.txt
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
