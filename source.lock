@@ -1,0 +1,4 @@
+# Linux upstream master snapshot, 2026-10-25; post-v7.3 merge window.
+# Source Makefile still says 7.3.0, not released 7.4.
+SOURCE_SHA=330517c63aa9b48227b6ab45f01003effac77ae4
+SOURCE_REPO=https://github.com/torvalds/linux

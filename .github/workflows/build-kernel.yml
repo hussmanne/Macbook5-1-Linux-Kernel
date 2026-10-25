@@ -1,0 +1,46 @@
+name: Build experimental MBP5,1 kernel
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'source.lock'
+      - 'scripts/**'
+      - 'runtime/**'
+      - '.github/workflows/build-kernel.yml'
+permissions:
+  contents: read
+concurrency:
+  group: mbp51-kernel-build
+  cancel-in-progress: false
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reclaim runner disk
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache
+          df -h .
+      - name: Build with upstream pacman-pkg in Arch container
+        run: |
+          docker run --rm --pull=always -v "$PWD:/work" -w /work archlinux:base-devel bash -euc '
+            pacman -Syu --noconfirm --needed git curl bc bison flex cpio libelf openssl pahole kmod rsync perl python gettext zstd
+            useradd -m -u 1000 builder
+            chown -R builder:builder /work
+            su builder -s /bin/bash -c "cd /work && bash scripts/build.sh"
+          '
+      - name: Verify package checksums and build manifests
+        run: |
+          ls -lah dist/
+          test -s dist/kernelrelease.txt
+          test -s dist/resolved.config
+          test -s dist/packages.sha256
+          (cd dist && sha256sum -c packages.sha256)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mbp51-kernel-and-headers
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
