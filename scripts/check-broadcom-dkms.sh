@@ -3,6 +3,7 @@
 # the host kernel or modifies the user's MacBook. Requires dkms + Arch wl sources.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
+source "$root/scripts/tier-profile.sh"
 dist=${1:-"$root/dist"}
 report=${2:-"$root/report"}
 mkdir -p "$report"
@@ -23,14 +24,19 @@ trap on_exit EXIT
 
 bash "$root/scripts/verify-artifacts.sh" "$dist"
 release=$(< "$dist/kernelrelease.txt")
-headers=("$dist"/linux-mbp51-extreme-headers-[0-9]*-x86_64.pkg.tar.zst)
-[[ ${#headers[@]} -eq 1 && -f "${headers[0]}" ]] || {
-  echo "Expected exactly one headers package" >&2; exit 1;
+headers=("$dist"/"$MBP51_PKGBASE"-headers-[0-9]*-x86_64.pkg.tar.zst)
+kernels=("$dist"/"$MBP51_PKGBASE"-[0-9]*-x86_64.pkg.tar.zst)
+[[ ${#headers[@]} -eq 1 && -f "${headers[0]}" &&
+   ${#kernels[@]} -eq 1 && -f "${kernels[0]}" ]] || {
+  echo "Expected exactly one matching kernel and headers package" >&2; exit 1;
 }
 
-# Install only the matching headers into this ephemeral Arch container.
+# Install kernel tree AND matching headers in the ephemeral Arch container:
+# DKMS refuses a headers-only tree without its kernel modules directory.
+# This is not a host boot; a container pacman hook may log missing running
+# kernel information, but explicit dkms build below controls the result.
 # The tested wl source comes from Arch Extra, not an untracked third-party fork.
-pacman -U --noconfirm "${headers[0]}"
+pacman -U --noconfirm "${kernels[0]}" "${headers[0]}"
 test -s "/usr/lib/modules/$release/build/Module.symvers"
 test -s "/usr/lib/modules/$release/build/include/config/auto.conf"
 
@@ -68,7 +74,7 @@ useradd -m -u 1000 mbp51pack
 mkdir -p "$root/.work"
 chown -R mbp51pack:mbp51pack "$root/.work"
 runuser -u mbp51pack -- bash "$root/compat/broadcom/make-local-package.sh" "$release" "${modules[0]}"
-pkg="$root/.work/broadcom/$release/package/mbp51-broadcom-wl-${release//-/_}-1-x86_64.pkg.tar.zst"
+pkg="$root/.work/broadcom/$release/package/$MBP51_WL_PKGNAME-${release//-/_}-1-x86_64.pkg.tar.zst"
 [[ -s "$pkg" ]] || { echo "Local module package absent" >&2; exit 1; }
 pacman -Qip "$pkg" > "$report/module-package-metadata.txt"
 printf '\nPackage SHA-256: ' >> "$report/module-package-metadata.txt"
