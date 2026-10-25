@@ -10,5 +10,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Audit repository scripts and source lock
         run: bash scripts/lint.sh
+
+  kconfig:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve pinned upstream Kconfig and enforce hardware/security contract
+        run: |
+          docker run --rm --pull=always -v "$PWD:/work:ro" -w /work archlinux:base-devel bash -euc '
+            pacman -Syu --noconfirm --needed curl bc bison flex
+            bash scripts/check-kconfig.sh
+          '

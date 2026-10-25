@@ -40,6 +40,7 @@ yes HIGH_RES_TIMERS
 yes CC_OPTIMIZE_FOR_PERFORMANCE
 no NO_HZ_FULL
 no HIBERNATION
+no ZSWAP  # Prevent duplicate compressed-swap layers; zram-generator owns LZ4 swap.
 "$config" --set-str LOCALVERSION "-mbp51-extreme"
 no LOCALVERSION_AUTO
 
