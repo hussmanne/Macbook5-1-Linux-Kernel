@@ -22,6 +22,11 @@
    The build also inspects package contents to verify matching kernel and
    headers ABI directories before publishing artifacts.
 
+Current fixed-hardware tuning: `KCFLAGS=-mtune=core2` preserves the generic
+x86-64 instruction set; schedutil is the default governor, PREEMPT_LAZY is
+required, NR_CPUS is 2, and the actual zram LZ4 backend is mandatory.
+The test must fail before packaging if any of these do not resolve.
+
 The pinned source currently has Makefile VERSION=7, PATCHLEVEL=3, SUBLEVEL=0,
 even though it is the development tree for the next version. Do not invent 7.4
 release-version packaging or claim merged patches absent from the source.
