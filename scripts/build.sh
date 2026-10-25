@@ -51,9 +51,9 @@ kernel_pkg=("$out"/linux-mbp51-extreme-[0-9]*-x86_64.pkg.tar.zst)
 headers_pkg=("$out"/linux-mbp51-extreme-headers-[0-9]*-x86_64.pkg.tar.zst)
 [[ "${#kernel_pkg[@]}" -eq 1 && -f "${kernel_pkg[0]}" ]] || { echo "Wrong kernel package count" >&2; exit 1; }
 [[ "${#headers_pkg[@]}" -eq 1 && -f "${headers_pkg[0]}" ]] || { echo "Wrong headers package count" >&2; exit 1; }
-bsdtar -tf "${kernel_pkg[0]}" | grep -Fxq "usr/lib/modules/$release/vmlinuz" || \
+bsdtar -tf "${kernel_pkg[0]}" | grep -Fx "usr/lib/modules/$release/vmlinuz" >/dev/null || \
   { echo "Kernel image missing from expected release path" >&2; exit 1; }
-bsdtar -tf "${headers_pkg[0]}" | grep -Fxq "usr/lib/modules/$release/build/.config" || \
+bsdtar -tf "${headers_pkg[0]}" | grep -Fx "usr/lib/modules/$release/build/.config" >/dev/null || \
   { echo "Headers config missing from expected release path" >&2; exit 1; }
 
 # Hash basenames only so hashes verify from any extracted artifact directory.
