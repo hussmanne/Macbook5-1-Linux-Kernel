@@ -44,6 +44,8 @@ printf 'kernel_release=%s\nwl_version=%s\narch_package=%s\n' \
   "$release" "$wl_ver" "$(pacman -Q broadcom-wl-dkms)" > "$report/source-versions.txt"
 
 # pacman may already register DKMS source. Register it if missing.
+python3 "$root/compat/broadcom/patch-broadcom-wl.py" "${sources[0]}" "$release" "$report"
+
 if [[ ! -L "/var/lib/dkms/broadcom-wl/$wl_ver/source" ]]; then
   dkms add -m broadcom-wl -v "$wl_ver"
 fi

@@ -24,6 +24,13 @@ diagnostic artifact.
 The test does **not** establish runtime compatibility, loading, network scans,
 network association, 2.4/5 GHz support, WPA2 authentication, or resume health.
 
+The first build check found API mismatches (cfg80211 key callbacks, removed
+ndo_do_ioctl), an isprint macro collision and old driver warnings. The pinned
+kernel identifies as 7.3.0 despite containing 7.4-era APIs. The strictly
+source-locked compat/broadcom/patch-broadcom-wl.py adapts only ephemeral Arch driver
+sources in CI and fails on unexpected source layouts. Only two specific
+legacy warning categories are made nonfatal; actual API errors remain fatal.
+
 If the driver fails to compile, first inspect `wl-make.log` and compare any
 new kernel APIs to the latest maintained Arch/Debian patch set. Do not suppress
 compile errors, disable warnings globally, or insert unsupported kernel stubs.
