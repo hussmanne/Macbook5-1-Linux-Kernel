@@ -117,6 +117,16 @@ deferred until the machine's boot partition and known-good recovery entry
 are verified; see [INSTALL.md](docs/INSTALL.md). Read-only device evidence
 is collected with `bash scripts/hardware-report.sh`.
 
+### One-command MX hardware survey
+
+Before changing the installed MX kernel, use the GitHub Actions workflow
+**Package MX hardware survey**. Its `mbp51-hardware-survey` artifact contains
+one portable program that captures the complete hardware/configuration
+inventory plus bounded idle and CPU-load measurements, including battery power,
+interrupts, idle-state residency, CPU frequency behavior, thermals, GPUs,
+audio, Wi-Fi, Bluetooth, storage, ACPI, and raw evidence. See
+[the survey guide](docs/HARDWARE-SURVEY.md).
+
 ### Direct SSD installation on the late-2008 MacBook
 
 **Current recommended route: EndeavourOS Titan Nova via the official Calamares

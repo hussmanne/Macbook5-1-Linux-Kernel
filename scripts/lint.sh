@@ -3,6 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop compat/broadcom/*.sh install/*.sh; do bash -n "$script"; done
 for script in scripts/benchmark/*.sh; do bash -n "$script"; done
+bash -n tools/mbp51-hardware-survey.sh
+bash tools/mbp51-hardware-survey.sh --help >/dev/null
 source "$PWD/scripts/tier-profile.sh"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]]

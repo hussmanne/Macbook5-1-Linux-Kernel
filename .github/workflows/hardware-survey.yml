@@ -1,0 +1,36 @@
+name: Package MX hardware survey
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/mbp51-hardware-survey.sh'
+      - 'docs/HARDWARE-SURVEY.md'
+      - '.github/workflows/hardware-survey.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build portable download bundle
+        run: |
+          set -euo pipefail
+          rm -rf bundle dist
+          mkdir -p bundle dist
+          cp tools/mbp51-hardware-survey.sh bundle/mbp51-hardware-survey.sh
+          cp docs/HARDWARE-SURVEY.md bundle/README.md
+          chmod 755 bundle/mbp51-hardware-survey.sh
+          bash -n bundle/mbp51-hardware-survey.sh
+          tar -czf dist/mbp51-hardware-survey.tar.gz -C bundle .
+          sha256sum dist/mbp51-hardware-survey.tar.gz > dist/mbp51-hardware-survey.tar.gz.sha256
+          cp bundle/mbp51-hardware-survey.sh dist/mbp51-hardware-survey.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mbp51-hardware-survey
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
