@@ -26,7 +26,7 @@ jobs:
           chmod 755 bundle/mbp51-hardware-survey.sh
           bash -n bundle/mbp51-hardware-survey.sh
           tar -czf dist/mbp51-hardware-survey.tar.gz -C bundle .
-          sha256sum dist/mbp51-hardware-survey.tar.gz > dist/mbp51-hardware-survey.tar.gz.sha256
+          (cd dist && sha256sum mbp51-hardware-survey.tar.gz > mbp51-hardware-survey.tar.gz.sha256)
           cp bundle/mbp51-hardware-survey.sh dist/mbp51-hardware-survey.sh
       - uses: actions/upload-artifact@v4
         with:
