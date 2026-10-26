@@ -30,6 +30,19 @@ artifact, builds the maintained Arch sources with our pinned patch, verifies
 `wl.ko` vermagic, and now tests building/inspecting the local pacman package.
 Its public diagnostic artifact contains logs and checksums, **not wl.ko**.
 
+Recent successful hosted evidence for the pinned source and isolated tiers:
+
+- Legacy/Daily baseline compatibility: run `40247554764` succeeded on commit
+  `23c8b461`.
+- BORE compatibility: run `40265566020` succeeded on commit `4a1d4442`.
+- Extreme Lab compatibility: run `40265593461` succeeded on commit
+  `4a1d4442`.
+- A second successful tier compatibility run, `40265636808`, also completed
+  on commit `4a1d4442`.
+
+These are compile, link, vermagic, and local-package checks. They do not
+replace a physical Wi-Fi association, suspend/reconnect, or boot test.
+
 Follow [installation/recovery](INSTALL.md). Never replace or remove the working
 stock kernel's Wi-Fi module to make the custom kernel load.
 

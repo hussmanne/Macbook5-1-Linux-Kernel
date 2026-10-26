@@ -53,6 +53,10 @@ development source.
    package both kernel and DKMS headers.
 4. Download the artifact, verify checksums, and *only then* follow the cautious manual installation procedure.
 
+For the actual experiment, keep LTS plus at least three independent custom
+boot entries: Daily, BORE, and Extreme Lab. See
+[the Lab boot-test matrix](docs/EXTREME-LAB-BOOT-TEST.md).
+
 ### Layout
 
 ```text

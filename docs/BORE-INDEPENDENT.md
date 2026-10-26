@@ -58,9 +58,9 @@ and requires the exact matching private Broadcom module before installation.
 
 ## Qualification status
 
-The source-port and artifact gates are implemented and locally exercised. CI
-must still compile the BORE package and its matching Broadcom module before it
-is called shippable. No physical MacBook boot has been claimed yet.
+The source-port, artifact, kernel-build, and matching Broadcom gates have
+passed in GitHub Actions for commit `4a1d4442`. No physical MacBook boot or
+scheduler performance claim has been made yet.
 
 On the physical machine, compare three states with the same HZ, governor,
 power profile, GPU state, workload, and thermal settling:

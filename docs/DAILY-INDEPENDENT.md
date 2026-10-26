@@ -56,8 +56,9 @@ it. Compare against a read-only stock-LTS reference from
 BORE is NOT equivalent to just reusing Daily packages under a different
 name. Its 7.3-rc2 BORE 7.0.0 scheduler port is now locked to the exact pinned
 development commit, with runtime toggling and separate artifact provenance.
-CI compilation, Broadcom compatibility, physical boot, and scheduler latency
-benchmarks remain release gates. Extreme Lab's first comparison is against
+CI compilation and Broadcom compatibility have now passed for the independent
+tiers. Physical boot and scheduler latency benchmarks remain release gates.
+Extreme Lab's first comparison is against
 the same recovered hardware feature set at HZ=250; it does not claim an
 undervolt or GPU power change. Any later voltage-control experiment needs an
 explicit stock-VID fallback. Do not silently publish mock tiers.

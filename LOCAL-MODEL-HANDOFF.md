@@ -69,7 +69,12 @@ Independent Daily tier from PR #22:
 - Private vendor module package `mbp51-broadcom-wl-daily`; unique `/usr/lib/modules/$release/updates/mbp51/wl.ko`, deps on `linux-mbp51-daily`.
 - Build `dist/daily/`, separate kernel and headers package; separate GitHub Actions `.github/workflows/build-daily.yml` artifact `mbp51-daily-kernel-and-headers`.
 - `install/activate-daily-kernel.sh --plan [DIST_DIR]` is read-only; `--install` installs packages, builds matching wl privately, creates `/boot/mbp51/daily/` hostonly/generic Dracut files, adds `/etc/grub.d/42_mbp51-daily` and manual GRUB entries, keeping explicit LTS default.
-- `MBP51_TIER=legacy` keeps old scripts backward-compatible. `MBP51_TIER=bore` now has a locked source port, isolated package identity, artifact checks, and a build workflow, but is **not shippable** until CI compiles both the kernel and matching Broadcom module. `MBP51_TIER=lab` now has a real feature-preserving HZ=250 configuration profile, isolated package identity, installer, and build path; voltage/GPU-rail/firmware experiments remain outside this first bootable Lab profile. Never bypass missing evidence with fake artifacts.
+- `MBP51_TIER=legacy` keeps old scripts backward-compatible. `MBP51_TIER=bore` now has a locked source port, isolated package identity, artifact checks, a successful build workflow, and successful matching Broadcom CI. It is still unqualified for physical boot and scheduler claims. `MBP51_TIER=lab` now has a real feature-preserving HZ=250 configuration profile, isolated package identity, installer, successful build, and successful matching Broadcom CI; voltage/GPU-rail/firmware experiments remain outside this first bootable Lab profile. Never bypass missing evidence with fake artifacts.
+- Hosted evidence now exists for the new tiers: BORE build `40263753492`, Lab
+  build `40263753465`, Daily build `40263753439`, static validation
+  `40263753486`, and successful Broadcom runs `40265566020`, `40265593461`,
+  and `40265636808`, all against commit `4a1d4442`. This proves CI artifacts
+  and matching Broadcom compilation, not physical boot or Wi-Fi behavior.
 
 ### Known CI issue that must be checked, not concealed
 
@@ -88,14 +93,14 @@ If a follow-up Broadcom workflow is required, test both artifacts independently.
 | Stock LTS | Recovery | `linux-lts` | Arch package ABI | distro maintained |
 | Legacy v1/v2 | Existing test | `linux-mbp51-extreme` | v1 installed / v2 CI build | `/boot/mbp51/` |
 | **Daily** | Tier 1 EEVDF; most reliable | `linux-mbp51-daily` | `7.3.0-mbp51-daily-g21a7f44f-v1` | `/boot/mbp51/daily/` |
-| **BORE** | Tier 2 scheduling research | `linux-mbp51-bore` | `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1` (CI pending) | `/boot/mbp51/bore/` |
-| **Lab** | Tier 3 feature-preserving HZ=250 experiment | `linux-mbp51-extreme-lab` | `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1` (CI pending) | `/boot/mbp51/lab/` |
+| **BORE** | Tier 2 scheduling research | `linux-mbp51-bore` | `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1` (CI passed) | `/boot/mbp51/bore/` |
+| **Lab** | Tier 3 feature-preserving HZ=250 experiment | `linux-mbp51-extreme-lab` | `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1` (CI passed) | `/boot/mbp51/lab/` |
 
 Four core boot targets (LTS + Daily/BORE/Lab) plus separately preserved legacy. Each custom tier needs isolated kernel+headers, source/patch provenance, external Broadcom package, Dracut host-only primary and generic fallback, unique GRUB ID. Package file-list collision test **before install**. No package ownership overlap; don't rely on a renamed menu entry alone.
 
 ## Immediate to-do list — in order, with verification criteria
 
-1. **Repo state and CI:** `git fetch origin && git status --short && git log --oneline -8`; inspect latest `main`, merged PR state, Actions results. Do not overwrite another agent's edits. Run `bash scripts/lint.sh`, `bash scripts/test-tier-profiles.sh`, `bash scripts/test-verify-artifacts.sh`, pinned Kconfig legacy+Daily+BORE+Lab. Fix Broadcom CI if needed, and confirm v2 + Daily + BORE + Lab builds produce distinct valid archives without collision.
+1. **Repo state and CI:** `git fetch origin && git status --short && git log --oneline -8`; inspect latest `main`, merged PR state, Actions results. Do not overwrite another agent's edits. Run `bash scripts/lint.sh`, `bash scripts/test-tier-profiles.sh`, `bash scripts/test-verify-artifacts.sh`, pinned Kconfig legacy+Daily+BORE+Lab. Current commit `4a1d4442` has passing static validation, Daily, BORE, Lab, legacy, and matching Broadcom CI runs. Confirm v2 + Daily + BORE + Lab builds produce distinct valid archives without collision.
 2. **LTS hardware comparison:** Boot **linux-lts** and capture `scripts/compare-kernels.sh`. Capture analogous v1/v2 data. Compare presence of `BAT*/power_supply`, AC adapter online, `PNP0C0A:00`, `upower.service`, AL(S)A codec and physical playback, Bluetooth, Nouveau warnings, USB endpoint status, gmux, backlight values, suspend/resume. The owner has not yet supplied the LTS comparison; absence of BAT* in v1 alone is not proof of battery failure. Never run an unbounded `bluetoothctl list`.
 3. **Tier 1 physically qualify:** Obtain Daily artifact only after successful build+hash validation, `install/activate-daily-kernel.sh --plan dist/daily`, check LTS default and entire installer script carefully before `--install`. Verify Wi-Fi driver `vermagic` against exact ABI, HDA audio playback/capture, Btrfs ACL, PSI+MEMCG, battery, SMC fans, network, suspend/resume, on-demand 9600M. No claim of production-ready until all pass on-device.
 4. **Dual GPU as independent modes:** check `xrandr --listproviders`, `glxinfo -B`, `DRI_PRIME=1 glxinfo -B`, DRM device owners, `vga_switcheroo` state and Nouveau pm behavior. Aim for LCD on 9400M + optional 9600M render/offload, OR controlled logout/reboot into gmux discrete mode if offloading doesn't work. Confirm GPU `OFF` genuinely removes rails; test `ON`/resume repeatedly before any persistent power-off. No automatic use of `MIGD`/`MDIS` or blind offlining. User explicitly wants to retain ability to use faster GPU.
