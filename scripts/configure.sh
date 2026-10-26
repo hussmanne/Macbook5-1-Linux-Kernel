@@ -12,7 +12,7 @@ no() { "$config" --disable "$1"; }
 set_hz() {
   local symbol="$1" value="$2" hz
   for hz in HZ_100 HZ_250 HZ_300 HZ_500 HZ_1000; do
-    if grep -q "^config $hz$" kernel/Kconfig.hz; then
+    if grep -Eq "^[[:space:]]*config $hz$" kernel/Kconfig.hz; then
       no "$hz"
     fi
   done
@@ -57,7 +57,7 @@ elif [[ "$MBP51_TIER" == lab ]]; then
   # feature recovered after the v1 failures (audio, UPower/userspaces, ACLs,
   # battery/SMC, both GPUs, Wi-Fi, input and thermal paths).
   set_hz HZ_250 250
-elif grep -q '^config HZ_500$' kernel/Kconfig.hz; then
+elif grep -Eq '^[[:space:]]*config HZ_500$' kernel/Kconfig.hz; then
   set_hz HZ_500 500
 else
   set_hz HZ_1000 1000
