@@ -37,11 +37,26 @@ for s in MODULES MODVERSIONS EFI EFI_STUB ACPI SUSPEND SATA_AHCI BLK_DEV_SD EXT4
   ACPI_EC ACPI_BATTERY BTRFS_FS_POSIX_ACL \
   HWMON THERMAL; do expect "$s" y; done
 if has_symbol HZ_500; then
-  expect HZ_500 y
-  expect HZ 500
+  if [[ "$MBP51_TIER" == bore ]]; then
+    expect HZ_1000 y
+    expect HZ 1000
+  elif [[ "$MBP51_TIER" == lab ]]; then
+    expect HZ_250 y
+    expect HZ 250
+  else
+    expect HZ_500 y
+    expect HZ 500
+  fi
+elif [[ "$MBP51_TIER" == lab ]]; then
+  expect HZ_250 y
+  expect HZ 250
 else
   expect HZ_1000 y
   expect HZ 1000
+fi
+if [[ "$MBP51_TIER" == bore ]]; then
+  expect SCHED_BORE y
+  expect MIN_BASE_SLICE_NS 2000000
 fi
 for s in DRM_NOUVEAU FORCEDETH SENSORS_APPLESMC HID_APPLE MOUSE_BCM5974 \
   USB_EHCI_HCD USB_OHCI_HCD SND_HDA_INTEL USB_VIDEO_CLASS CFG80211 \

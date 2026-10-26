@@ -1,0 +1,60 @@
+name: Build independent MacBookPro5,1 BORE kernel
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'source.lock'
+      - 'patches/bore.lock'
+      - 'patches/bore/**'
+      - 'scripts/apply-tier-patches.sh'
+      - 'scripts/tier-profile.sh'
+      - 'scripts/build.sh'
+      - 'scripts/configure.sh'
+      - 'scripts/audit-config.sh'
+      - 'scripts/check-kconfig.sh'
+      - 'scripts/verify-artifacts.sh'
+      - 'compat/broadcom/**'
+      - '.github/workflows/build-bore.yml'
+permissions:
+  contents: read
+concurrency:
+  group: mbp51-bore-kernel
+  cancel-in-progress: true
+jobs:
+  compile-bore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reclaim runner disk
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache
+          df -h .
+      - uses: actions/cache@v4
+        with:
+          path: .cache/kconfig
+          key: mbp51-linux-source-${{ hashFiles('source.lock') }}
+      - name: Compile isolated BORE kernel and headers
+        run: |
+          docker run --rm --pull=always -v "$PWD:/work" -w /work archlinux:base-devel bash -euc '
+            pacman -Syu --noconfirm --needed git curl bc bison flex cpio libelf openssl pahole kmod rsync perl python gettext zstd
+            useradd -m -u 1000 builder
+            mkdir -p /work/.work /work/dist/bore
+            chown -R builder:builder /work/.work /work/dist
+            su builder -s /bin/bash -c "cd /work && MBP51_TIER=bore bash scripts/build.sh"
+          '
+      - name: Verify BORE provenance, config and package ABI
+        run: |
+          MBP51_TIER=bore bash scripts/verify-artifacts.sh dist/bore
+          grep -Fxq 'kernel_tier=bore' dist/bore/build-manifest.txt
+          grep -Fxq 'pkgbase=linux-mbp51-bore' dist/bore/build-manifest.txt
+          grep -Fxq 'CONFIG_SCHED_BORE=y' dist/bore/resolved.config
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mbp51-bore-kernel-and-headers
+          path: dist/bore/
+          if-no-files-found: error
+          retention-days: 30

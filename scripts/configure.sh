@@ -38,7 +38,18 @@ mod SND_HDA_GENERIC
 # Remove unneeded cgroup debugging. AMD P-state is selected by upstream
 # processor Kconfig even on Intel builds; it cannot be disabled here.
 no CGROUP_DEBUG
-if grep -q '^config HZ_500$' kernel/Kconfig.hz; then
+if [[ "$MBP51_TIER" == bore ]]; then
+  yes SCHED_BORE
+  "$config" --set-val MIN_BASE_SLICE_NS 2000000
+  yes HZ_1000
+  "$config" --set-val HZ 1000
+elif [[ "$MBP51_TIER" == lab ]]; then
+  # First Extreme Lab profile: isolate the HZ experiment while preserving every
+  # feature recovered after the v1 failures (audio, UPower/userspaces, ACLs,
+  # battery/SMC, both GPUs, Wi-Fi, input and thermal paths).
+  yes HZ_250
+  "$config" --set-val HZ 250
+elif grep -q '^config HZ_500$' kernel/Kconfig.hz; then
   yes HZ_500
   "$config" --set-val HZ 500
 else

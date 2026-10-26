@@ -25,6 +25,44 @@ if [[ "$MBP51_TIER" != legacy ]]; then
       echo "Tier/package identity mismatch" >&2; exit 1;
     }
 fi
+if [[ "$MBP51_TIER" == bore ]]; then
+  source "$root/patches/bore.lock"
+  [[ -s "$dist/patch-manifest.txt" ]] || {
+    echo "Missing BORE patch manifest" >&2; exit 1;
+  }
+  grep -Fxq "patchset=$BORE_PATCH_REV" "$dist/patch-manifest.txt" || {
+    echo "BORE patch revision disagrees with locked provenance" >&2; exit 1;
+  }
+  grep -Fxq "patch_sha256=$BORE_PATCH_SHA256" "$dist/patch-manifest.txt" || {
+    echo "BORE patch hash disagrees with locked provenance" >&2; exit 1;
+  }
+  grep -Fxq "patchset=$BORE_PATCH_REV" "$dist/build-manifest.txt" || {
+    echo "Build manifest is missing the locked BORE patch revision" >&2; exit 1;
+  }
+  grep -Fxq "patch_sha256=$BORE_PATCH_SHA256" "$dist/build-manifest.txt" || {
+    echo "Build manifest is missing the locked BORE patch hash" >&2; exit 1;
+  }
+  grep -Fxq 'CONFIG_SCHED_BORE=y' "$dist/resolved.config" || {
+    echo "Resolved BORE config does not enable CONFIG_SCHED_BORE" >&2; exit 1;
+  }
+elif [[ "$MBP51_TIER" == lab ]]; then
+  source "$root/patches/lab.lock"
+  [[ -s "$dist/patch-manifest.txt" ]] || {
+    echo "Missing Lab profile manifest" >&2; exit 1;
+  }
+  grep -Fxq "patchset=$LAB_PROFILE_REV" "$dist/patch-manifest.txt" || {
+    echo "Lab profile revision disagrees with locked provenance" >&2; exit 1;
+  }
+  grep -Fxq "profile_kind=$LAB_PROFILE_KIND" "$dist/patch-manifest.txt" || {
+    echo "Lab profile kind disagrees with locked provenance" >&2; exit 1;
+  }
+  grep -Fxq 'CONFIG_HZ_250=y' "$dist/resolved.config" || {
+    echo "Resolved Lab config does not enable CONFIG_HZ_250" >&2; exit 1;
+  }
+  grep -Fxq 'CONFIG_HZ=250' "$dist/resolved.config" || {
+    echo "Resolved Lab config does not select HZ=250" >&2; exit 1;
+  }
+fi
 shopt -s nullglob
 kernel=("$dist"/"$MBP51_PKGBASE"-[0-9]*-x86_64.pkg.tar.zst)
 headers=("$dist"/"$MBP51_PKGBASE"-headers-[0-9]*-x86_64.pkg.tar.zst)
@@ -42,6 +80,13 @@ done
 line_count=0
 declare -A listed=()
 while read -r hash filename rest; do
+  # GNU sha256sum may prefix binary-mode filenames with '*' (MSYS2 does this
+  # for the same command that Linux CI emits with two spaces). Normalize that
+  # presentation marker, but continue to reject paths, traversal and any
+  # additional fields.
+  if [[ "$filename" == \** ]]; then
+    filename=${filename#\*}
+  fi
   [[ "$hash" =~ ^[0-9a-f]{64}$ && "$filename" =~ ^[A-Za-z0-9._+-]+\.pkg\.tar\.zst$ && -z "${rest:-}" ]] || {
     echo "Invalid or nonportable packages.sha256 entry: $filename" >&2; exit 1;
   }

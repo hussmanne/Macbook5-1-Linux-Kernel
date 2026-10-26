@@ -32,9 +32,12 @@ if [[ ! -s "$archive" ]] || ! printf '%s  %s\n' "$SOURCE_ARCHIVE_SHA256" "$archi
 fi
 archive_sha256="$SOURCE_ARCHIVE_SHA256"
 printf '%s  %s\n' "$archive_sha256" "$(basename "$archive")" > "$out/source-archive.sha256"
-tar -xzf "$archive" -C "$work"
 src="$work/linux-$SOURCE_SHA"
+rm -rf "$src"
+tar -xzf "$archive" -C "$work"
 [[ -f "$src/Makefile" ]] || exit 1
+patch_manifest="$out/patch-manifest.txt"
+bash "$root/scripts/apply-tier-patches.sh" "$src" "$patch_manifest"
 cd "$src"
 make x86_64_defconfig
 bash "$root/scripts/configure.sh" "$src"
@@ -61,10 +64,11 @@ count=$(find "$out" -maxdepth 1 -name '*.pkg.tar.zst' -type f | wc -l)
 release=$(< include/config/kernel.release)
 [[ "$release" == *"$KERNEL_LOCALVERSION" ]] || { echo "Unexpected built release: $release" >&2; exit 1; }
 printf '%s\n' "$release" > "$out/kernelrelease.txt"
+patch_sha256=$(awk -F= '$1 == "patch_sha256" { print $2; exit }' "$patch_manifest")
 printf 'source_commit=%s\nkernel_release=%s\nsource_archive_sha256=%s\n' \
   "$SOURCE_SHA" "$release" "$archive_sha256" > "$out/build-manifest.txt"
-printf 'kernel_tuning_flags=%s\nkernel_tier=%s\npkgbase=%s\n' \
-  "$KCFLAGS" "$MBP51_TIER" "$MBP51_PKGBASE" >> "$out/build-manifest.txt"
+printf 'kernel_tuning_flags=%s\nkernel_tier=%s\npkgbase=%s\npatchset=%s\npatch_sha256=%s\n' \
+  "$KCFLAGS" "$MBP51_TIER" "$MBP51_PKGBASE" "$MBP51_PATCHSET" "${patch_sha256:-none}" >> "$out/build-manifest.txt"
 gcc --version | head -n 1 >> "$out/build-manifest.txt"
 
 # Ensure that headers and bootable image use exactly the same module ABI path.

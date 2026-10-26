@@ -1,6 +1,7 @@
 # MacBookPro5,1: three-tier Linux kernel system and multiboot contract
 
-Status: **architecture and read-only preflight**, not three built images.
+Status: **architecture plus independent build paths**, with physical boot still
+required before any tier is trusted.
 No automatic formatting/partitioning, GPU power switching, undervolting or
 kernel activation is authorized by this document. A physical MacBook boot
 is the mandatory final gate. Source snapshot initially uses the pinned
@@ -79,11 +80,12 @@ missing BAT* merely because userspace UPower can start.
 ## Tier 2 — BORE Responsive Experimental
 
 Everything tier1 needs to be functional, including both NVIDIA GPUs and
-private Broadcom. Port BORE v7.0.0 from the existing 7.3-rc2 patch to
-EXACT pinned 7.4-development source (kernel/sched/fair.c changed) in an
-isolated patch series; record provenance and SHA, fail on any unresolved
-hunks. BORE optional runtime sysctl kernel.sched_bore (0=EEVDF-style
-behavior, 1=BORE) only after it is compiled; initially default off.
+private Broadcom. The current local BORE v7.0.0 port targets the EXACT pinned
+7.4-development source (kernel/sched/fair.c changed) in an isolated locked
+patch series; it records provenance and fails on unresolved hunks. BORE's
+optional runtime sysctl `kernel.sched_bore` (0=EEVDF-style behavior, 1=BORE)
+is compiled in but initially default off. CI compilation, matching Broadcom
+compatibility, and physical qualification remain release gates.
 No claim of performance until input-latency, fork-heavy and throughput
 stress pass. No sched_ext/BTF burden in this tier by default. Experiment
 250Hz HZ versus 1000Hz only if a benchmark justifies it; don't change
@@ -92,20 +94,20 @@ and power profile are runtime policies, not tier-unique blacklists.
 
 ## Tier 3 — Extreme Hardware Lab
 
-Opt-in, untrusted for everyday computing: may include carefully reviewed
-PHC-style Penryn undervolt controls on stock voltage by default; a
-per-AC/per-battery VID profile only when validated with full thermal,
-CPU, memory, SSD checksum, and suspend/resume stress. No raw MSR writes
-or flashing Apple firmware under an automated boot script. No BCLK
-overclock promise (Apple firmware does not expose normal controls).
-Potential stronger subsystem slimming, host-specific built-in storage,
-controlled EEVDF/BORE experiments, optimized userspace/background jobs,
-optional low-power GPU rail-off, PWM characterization and SATA ALPM
-after measured baselines. Keep EFI boot, thermal trips, SMC sensors,
-PM_SLEEP, ACPI EC, no unsafe SSD ALPM min_power default, and absolute
-LTS recovery. The extreme tier may be incomplete if PHC port doesn't
-survive compile/hardware validation; never silently replace with
-ordinary Tier2 and claim successful undervolting.
+Opt-in, untrusted for everyday computing. The first real Lab artifact is a
+feature-preserving HZ=250 configuration experiment, keeping the recovered
+audio, USER_NS, MEMCG, PSI, Btrfs ACL, battery/SMC, Broadcom, input, thermal,
+and dual-GPU paths. It is intentionally separate from Daily and BORE so the
+owner can boot at least three custom kernels plus LTS and compare them.
+
+Later Lab revisions may include carefully reviewed PHC-style Penryn undervolt
+controls on stock voltage by default; a per-AC/per-battery VID profile only
+when validated with full thermal, CPU, memory, SSD checksum, and suspend/resume
+stress. No raw MSR writes or flashing Apple firmware under an automated boot
+script. No BCLK overclock promise. Optional GPU rail-off, PWM characterization,
+and SATA ALPM remain measured follow-on experiments, not hidden defaults.
+Keep EFI boot, thermal trips, SMC sensors, PM_SLEEP, ACPI EC, safe SSD ALPM,
+and absolute LTS recovery.
 
 ## GPU modes are INDEPENDENT of kernel tiers
 

@@ -17,11 +17,28 @@ root = Path(__file__).resolve().parents[2]
 locked_sha = "21a7f44fd0765fcc5194130b28767786eba1d1e7"
 if "SOURCE_SHA=" + locked_sha not in (root / "source.lock").read_text():
     sys.exit("Pinned source moved; review driver compatibility before updating")
+profile = {}
+for line in (root / "source.lock").read_text().splitlines():
+    if "=" in line and not line.startswith("#"):
+        key, value = line.split("=", 1)
+        profile[key] = value
+if (root / "patches/bore.lock").is_file():
+    for line in (root / "patches/bore.lock").read_text().splitlines():
+        if "=" in line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            profile[key] = value
+if (root / "patches/lab.lock").is_file():
+    for line in (root / "patches/lab.lock").read_text().splitlines():
+        if "=" in line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            profile[key] = value
 # Accept ONLY the exact local ABIs defined for this source; never permit an
 # arbitrary KERNELRELEASE just because it happens to share the pinned SHA.
 allowed_releases = {
     "7.3.0-mbp51-extreme-g" + locked_sha[:8] + "-v2",
     "7.3.0-mbp51-daily-g" + locked_sha[:8] + "-v1",
+    "7.3.0-mbp51-bore-g" + locked_sha[:8] + "-" + profile.get("BORE_PATCH_REV", ""),
+    "7.3.0-mbp51-lab-g" + locked_sha[:8] + "-" + profile.get("LAB_PROFILE_REV", ""),
 }
 if release not in allowed_releases:
     sys.exit("Unsupported locked development-kernel release: " + release +

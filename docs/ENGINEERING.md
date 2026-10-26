@@ -1,12 +1,15 @@
-# linux-mbp51-extreme: full engineering contract
+# MacBookPro5,1: baseline engineering contract
 
 ## Objective
 
-Design one custom rolling-compatible Linux kernel for a late-2008 MacBookPro5,1:
+Design a trustworthy Daily baseline and reusable safety contract for separately
+packaged Linux kernel tiers on a late-2008 MacBookPro5,1:
 minimize irrelevant drivers and instrumentation, prioritize short interactive
 tasks on two Penryn cores, exploit CPU sleep states, compress memory efficiently,
 preserve working dual-NVIDIA rendering and Apple-specific hardware, and apply
-aggressive whole-system PowerTOP tuning. No multi-kernel optimization matrix.
+aggressive whole-system PowerTOP tuning. BORE and Lab experiments must keep
+their own package, module, boot, source, and measurement identities rather
+than weakening this baseline.
 
 The machine is a laptop and power efficiency matters as much as throughput.
 Removing dormant modules saves build/storage size more reliably than energy.
@@ -103,12 +106,14 @@ link rate.
 
 ## Packaging, CI and recovery
 
-Build entirely on GitHub public Ubuntu x86-64 runner inside Arch container.
+Build each enabled tier entirely on GitHub public Ubuntu x86-64 runners inside
+an Arch container.
 Standard runner currently lists 4 vCPU / 16 GB RAM / 14 GB SSD: reclaim unused
 preinstalled tools, minimize debug builds and avoid full git history. Download
 GitHub tarball by pinned upstream commit, record its actual sha256. Use
-upstream's make pacman-pkg with PACMAN_PKGBASE=linux-mbp51-extreme and
-PACMAN_EXTRAPACKAGES=headers, ensuring matching external-module build headers.
+upstream's make pacman-pkg with the tier-specific PACMAN_PKGBASE selected by
+scripts/tier-profile.sh and PACMAN_EXTRAPACKAGES=headers, ensuring matching
+external-module build headers.
 The Linux tree's maintained install-extmod-build script is preferred to manual
 headers assembly. Two distinct Arch packages and a resolved .config are the
 deliverables. Do not override stock 'linux' provides.

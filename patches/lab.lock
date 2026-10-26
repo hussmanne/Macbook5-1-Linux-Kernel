@@ -1,0 +1,4 @@
+LAB_PROFILE_REV=lab-hz250-r1
+LAB_PROFILE_KIND=config-only
+LAB_TARGET_SOURCE_SHA=21a7f44fd0765fcc5194130b28767786eba1d1e7
+LAB_DESCRIPTION=feature-preserving-extreme-config-with-250hz

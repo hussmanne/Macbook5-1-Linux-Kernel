@@ -1,8 +1,10 @@
 # Independent Daily kernel (first of three tiers)
 
 This is an isolated Tier 1 build contract, NOT an assertion that it is
-already compiled or physically validated. BORE and Lab deliberately fail
-closed until real, reviewed scheduler/voltage patchsets exist.
+already compiled or physically validated. BORE now has a real pinned
+downstream port and independent build path. Extreme Lab now has a real
+feature-preserving HZ=250 configuration path; voltage and hardware-control
+experiments remain separate from the first bootable Lab profile.
 
 ## Architecture
 
@@ -52,7 +54,10 @@ it. Compare against a read-only stock-LTS reference from
 ## Tier roadmap
 
 BORE is NOT equivalent to just reusing Daily packages under a different
-name. Port and audit the 7.3-rc2 BORE 7.0.0 patch to our exact pinned
-development commit, preserve runtime toggling and run scheduler latency
-benchmarks. Extreme needs a separate verified voltage-control experiment
-and explicit stock-VID fallback. Do not silently publish mock tiers.
+name. Its 7.3-rc2 BORE 7.0.0 scheduler port is now locked to the exact pinned
+development commit, with runtime toggling and separate artifact provenance.
+CI compilation, Broadcom compatibility, physical boot, and scheduler latency
+benchmarks remain release gates. Extreme Lab's first comparison is against
+the same recovered hardware feature set at HZ=250; it does not claim an
+undervolt or GPU power change. Any later voltage-control experiment needs an
+explicit stock-VID fallback. Do not silently publish mock tiers.

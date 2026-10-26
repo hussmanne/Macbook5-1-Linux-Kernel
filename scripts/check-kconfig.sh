@@ -22,6 +22,7 @@ fi
 tar -xzf "$archive" -C "$tmp"
 src="$tmp/linux-$SOURCE_SHA"
 test -f "$src/Makefile"
+bash "$root/scripts/apply-tier-patches.sh" "$src" "$tmp/patch-manifest.txt"
 make -C "$src" x86_64_defconfig
 bash "$root/scripts/configure.sh" "$src"
 make -C "$src" olddefconfig

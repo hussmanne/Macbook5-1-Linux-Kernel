@@ -1,13 +1,16 @@
 # Macbook5-1-Linux-Kernel
 
-## linux-mbp51-extreme
+## MacBookPro5,1 kernel tiers
 
-One aggressively stripped, performance- and power-oriented custom Arch kernel for the late-2008 Apple MacBookPro5,1. Built in GitHub Actions with **no local WSL or Linux required**.
+Independently packaged, performance- and power-oriented Arch kernels for the
+late-2008 Apple MacBookPro5,1. Built in GitHub Actions with **no local WSL or
+Linux required**.
 
-**STATUS: experimental. Baseline kernel and Broadcom compatibility compile
-passed in hosted CI. A new source-locked Linux 7.4 development snapshot at
-21a7f44fd076 is undergoing fresh validation. No physical MacBook boot has
-yet been performed. Never install as the only bootable kernel.**
+**STATUS: experimental.** Daily upstream EEVDF, BORE, the feature-preserving
+Extreme Lab profile, and the legacy corrective kernel have separate
+package/module/boot identities. Hosted CI is the compile and provenance gate;
+physical boot testing is intentionally multi-kernel. Never remove LTS or test
+an experimental tier as the only bootable kernel.
 
 Upstream is pinned to a full Git SHA in [source.lock](source.lock). Our reviewed 7.4 development snapshot still identifies itself as **7.3.0** in its upstream Makefile, with a unique source-specific local version suffix. This is not a released or tagged 7.4 kernel.
 
@@ -15,9 +18,21 @@ Upstream is pinned to a full Git SHA in [source.lock](source.lock). Our reviewed
 
 Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP79, integrated 9400M (NVAC), discrete 9600M GT (NV96), Apple gmux and SMC, ADATA SU635 3 Gb/s SATA SSD, BCM4322 Wi-Fi using proprietary broadcom-wl DKMS, NVIDIA forcedeth Ethernet. MX Linux previously verified both Nouveau renderers, input, network and ACPI S3 suspend/wake.
 
+### Source terminology
+
+The source lock is a post-v7.3 Linux development snapshot in the v7.4 merge
+window. Its upstream Makefile still reports `7.3.0`; this repository does not
+call it a released Linux 7.4 kernel. **BORE 7.0.0 is the BORE scheduler
+project's release number, not a Linux 7.0 kernel.** The BORE patch targets
+Linux 7.3-rc2 and is carried as a reviewed port onto the pinned post-v7.3/v7.4
+development source.
+
 ### Decisions
 
-- One combined slim/performance/power build; no competing custom kernel variants.
+- Daily is the upstream-EEVDF reference. BORE is a separate scheduler
+  alternative. Extreme Lab is a real feature-preserving HZ=250 configuration
+  experiment that keeps the features recovered after v1; voltage, GPU rail,
+  and firmware experiments remain separate and are not hidden in this profile.
 - User-directed **CONFIG_CPU_MITIGATIONS=n**. This deliberately removes optional CPU speculative-execution side-channel protections; cannot be reversed with a boot flag.
 - Hardware family trimming, no heavy debug/sanitizer builds; retain DEBUG_FS, FTRACE and PERF_EVENTS for PowerTOP and vga_switcheroo.
 - Upstream EEVDF with lazy dynamic preemption, NO_HZ_IDLE, 1000 Hz tick
@@ -30,8 +45,12 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
 ### Build and install
 
 1. Review [Engineering specification](docs/ENGINEERING.md), [build procedure](docs/BUILD.md), and [installation/rescue instructions](docs/INSTALL.md).
-2. After merging the PR, merging to main triggers one build automatically; GitHub Actions > **Build experimental MBP5,1 kernel** > **Run workflow** is also supported.
-3. The workflow downloads the pinned source, runs Kconfig resolution and audit, and invokes upstream kernel's maintained `make pacman-pkg` target to package both kernel and DKMS headers.
+2. The legacy, Daily, BORE, and Extreme Lab workflows build independently.
+   Daily uses upstream EEVDF; BORE applies the locked scheduler port; Lab
+   applies the locked feature-preserving HZ=250 configuration profile.
+3. Each workflow downloads the pinned source, runs Kconfig resolution and
+   audit, and invokes upstream kernel's maintained `make pacman-pkg` target to
+   package both kernel and DKMS headers.
 4. Download the artifact, verify checksums, and *only then* follow the cautious manual installation procedure.
 
 ### Layout
@@ -40,14 +59,21 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
 .
 ├── .github/workflows/
 │   ├── lint.yml
-│   └── build-kernel.yml
+│   ├── build-kernel.yml
+│   ├── build-daily.yml
+│   ├── build-bore.yml
+│   └── build-lab.yml
 ├── AGENTS.md
 ├── source.lock
 ├── scripts/
 │   ├── configure.sh
 │   ├── audit-config.sh
 │   ├── build.sh
+│   ├── apply-tier-patches.sh
 │   └── lint.sh
+├── patches/
+│   ├── bore.lock
+│   └── lab.lock
 ├── runtime/
 │   ├── systemd/mbp51-powertop.service
 │   ├── systemd/zram-generator.conf
@@ -59,7 +85,10 @@ Core 2 Duo P8600 (2.4 GHz, Penryn, x86-64-v1 with SSE4.1), 8 GB RAM, NVIDIA MCP7
     └── INSTALL.md
 ```
 
-Important: CI passing means packages were built and audited, **not** that Broadcom STA has compiled for them or the Mac's Nouveau, gmux, sleep, or power policy has been hardware-verified.
+Important: CI passing means packages were built and audited, and the matching
+Broadcom STA build passed its own job when that job is green. It still does
+**not** prove the Mac's Nouveau, gmux, sleep, scheduler behavior, battery,
+audio, or power policy has been hardware-verified.
 
 ### External Broadcom Wi-Fi compatibility
 

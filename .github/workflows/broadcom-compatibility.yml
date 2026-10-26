@@ -1,17 +1,27 @@
 name: Broadcom wl DKMS compatibility
 on:
-  # Re-test against exactly the newly published kernel headers.
+  # Re-test against exactly the newly published legacy, Daily, BORE, or Lab headers.
   workflow_run:
-    workflows: ["Build experimental MBP5,1 kernel"]
+    workflows:
+      - "Build experimental MBP5,1 kernel"
+      - "Build independent MacBookPro5,1 Daily kernel"
+      - "Build independent MacBookPro5,1 BORE kernel"
+      - "Build independent MacBookPro5,1 Extreme Lab kernel"
     types: [completed]
   # Re-test a known, successful archived build without recompiling the kernel.
   workflow_dispatch:
     inputs:
       run_id:
-        description: "Successful build run containing mbp51-kernel-and-headers"
+        description: "Successful build run containing the selected tier artifact"
         required: true
         type: string
         default: ""
+      tier:
+        description: "Artifact tier represented by run_id"
+        required: true
+        type: choice
+        options: [legacy, daily, bore, lab]
+        default: legacy
   # Only exact successful kernel/header runs qualify; manual runs require an explicit run ID.
 permissions:
   contents: read
@@ -24,19 +34,25 @@ jobs:
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.name == 'Build experimental MBP5,1 kernel' ||
+        github.event.workflow_run.name == 'Build independent MacBookPro5,1 Daily kernel' ||
+         github.event.workflow_run.name == 'Build independent MacBookPro5,1 BORE kernel' ||
+         github.event.workflow_run.name == 'Build independent MacBookPro5,1 Extreme Lab kernel') &&
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
       TARGET_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id || '40166412535' }}
+      TARGET_TIER: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 Daily kernel' && 'daily' || github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 BORE kernel' && 'bore' || github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 Extreme Lab kernel' && 'lab' || inputs.tier || 'legacy' }}
+      TARGET_ARTIFACT: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 Daily kernel' && 'mbp51-daily-kernel-and-headers' || github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 BORE kernel' && 'mbp51-bore-kernel-and-headers' || github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Build independent MacBookPro5,1 Extreme Lab kernel' && 'mbp51-extreme-lab-kernel-and-headers' || inputs.tier == 'daily' && 'mbp51-daily-kernel-and-headers' || inputs.tier == 'bore' && 'mbp51-bore-kernel-and-headers' || inputs.tier == 'lab' && 'mbp51-extreme-lab-kernel-and-headers' || 'mbp51-kernel-and-headers' }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
-          name: mbp51-kernel-and-headers
+          name: ${{ env.TARGET_ARTIFACT }}
           repository: ${{ github.repository }}
           run-id: ${{ env.TARGET_RUN_ID }}
           github-token: ${{ github.token }}
@@ -44,15 +60,16 @@ jobs:
       - name: Syntax-check local build-only helper
         run: bash -n compat/broadcom/build-on-device.sh
       - name: Verify downloaded package hashes and pinned source
-        run: bash scripts/verify-artifacts.sh dist
+        run: MBP51_TIER="$TARGET_TIER" bash scripts/verify-artifacts.sh dist
       - name: Compile maintained Arch broadcom-wl-dkms against matching headers
         run: |
           mkdir -p report
           docker run --rm --pull=always \
             -v "$PWD:/work" -w /work \
+            -e TARGET_TIER="$TARGET_TIER" \
             archlinux:base-devel bash -euc '
               pacman -Syu --noconfirm --needed dkms broadcom-wl-dkms bc bison flex kmod libelf openssl python
-              bash scripts/check-broadcom-dkms.sh /work/dist /work/report
+              MBP51_TIER="$TARGET_TIER" bash scripts/check-broadcom-dkms.sh /work/dist /work/report
             '
       - name: Publish diagnostic logs (even on failure)
         if: always()

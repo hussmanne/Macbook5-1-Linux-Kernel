@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Install one isolated Daily kernel. Never overwrites old /boot/mbp51 files.
+# Install one isolated Daily, BORE, or Extreme Lab kernel. Never overwrites legacy
+# /boot/mbp51 files. Direct invocation defaults to Daily for compatibility;
+# activate-bore-kernel.sh and activate-lab-kernel.sh select their tiers.
 # Run unprivileged. --plan is read-only; --install requires sudo.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-export MBP51_TIER=daily
+export MBP51_TIER=${MBP51_TIER:-daily}
 source "$root/scripts/tier-profile.sh"
 mode=${1:---plan}
-dist=${2:-"$root/dist/daily"}
+dist=${2:-"$root/dist/$MBP51_TIER"}
 [[ "$mode" == --plan || "$mode" == --install ]] || {
   echo "Usage: $0 --plan [DIST_DIR] | --install [DIST_DIR]" >&2; exit 2;
 }
@@ -14,16 +16,16 @@ dist=${2:-"$root/dist/daily"}
 bash "$root/scripts/verify-artifacts.sh" "$dist"
 release=$(< "$dist/kernelrelease.txt")
 [[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
-  echo "Unexpected daily ABI: $release" >&2; exit 2;
+  echo "Unexpected $MBP51_TIER ABI: $release" >&2; exit 2;
 }
 shopt -s nullglob
 kernels=("$dist"/"$MBP51_PKGBASE"-[0-9]*-x86_64.pkg.tar.zst)
 headers=("$dist"/"$MBP51_PKGBASE"-headers-[0-9]*-x86_64.pkg.tar.zst)
 [[ ${#kernels[@]} == 1 && ${#headers[@]} == 1 ]] || exit 2
-echo "Daily ABI: $release"
+echo "$MBP51_TIER ABI: $release"
 echo "Package: ${kernels[0]}"
 echo "Headers: ${headers[0]}"
-echo "Stock linux-lts and existing experimental kernel remain untouched."
+echo "Stock linux-lts, legacy kernel, and other custom tiers remain untouched."
 if [[ "$mode" == --plan ]]; then
   echo "Read-only package verification succeeded; no installation attempted."
   exit 0
@@ -58,7 +60,7 @@ sudo pacman -U --noconfirm "${kernels[0]}" "${headers[0]}"
   echo "Kernel/headers Module.symvers missing"; exit 1;
 }
 # BCM4322 driver remains proprietary and is built solely on the MacBook.
-MBP51_TIER=daily bash "$root/compat/broadcom/make-local-package.sh" "$release"
+MBP51_TIER="$MBP51_TIER" bash "$root/compat/broadcom/make-local-package.sh" "$release"
 stage="$root/.work/broadcom/$release/package"
 (cd "$stage" && sha256sum -c module-package.sha256)
 wl_packages=("$stage"/"$MBP51_WL_PKGNAME"-[0-9]*-x86_64.pkg.tar.zst)
@@ -73,40 +75,40 @@ expected="/usr/lib/modules/$release/updates/mbp51/wl.ko"
 [[ "$(modinfo -k "$release" -F vermagic wl)" == "$release "* ]] || {
   echo "Wrong wl vermagic"; exit 1;
 }
-boot_dir=/boot/mbp51/daily
+boot_dir=/boot/mbp51/$MBP51_BOOT_SUBDIR
 sudo install -Dm644 "/usr/lib/modules/$release/vmlinuz" "$boot_dir/vmlinuz"
 sudo dracut --force --hostonly --kver "$release" "$boot_dir/initramfs.img"
 sudo dracut --force --no-hostonly --kver "$release" "$boot_dir/initramfs-fallback.img"
 [[ -s "$boot_dir/vmlinuz" && -s "$boot_dir/initramfs.img" &&
    -s "$boot_dir/initramfs-fallback.img" ]] || exit 1
-# Write independent custom-menu file; NEVER replace 41_mbp51-experimental.
+# Write independent custom-menu file; NEVER replace the legacy menu.
 entry=$(mktemp)
 trap 'rm -f "$entry"' EXIT
 cat > "$entry" <<EOF
 #!/bin/sh
-cat <<'DAILY_GRUB'
-menuentry 'MacBookPro5,1 Daily (upstream EEVDF)' --id=mbp51-daily {
+cat <<'MBP51_TIER_GRUB'
+menuentry '$MBP51_GRUB_TITLE' --id=$MBP51_GRUB_ID {
   insmod part_gpt
   insmod btrfs
   search --no-floppy --fs-uuid --set=root $boot_uuid
-  linux $subvol/boot/mbp51/daily/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
-  initrd $subvol/boot/mbp51/daily/initramfs.img
+  linux $subvol/boot/mbp51/$MBP51_BOOT_SUBDIR/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
+  initrd $subvol/boot/mbp51/$MBP51_BOOT_SUBDIR/initramfs.img
 }
-menuentry 'MacBookPro5,1 Daily (generic recovery)' --id=mbp51-daily-fallback {
+menuentry '$MBP51_GRUB_TITLE (generic recovery)' --id=$MBP51_GRUB_ID-fallback {
   insmod part_gpt
   insmod btrfs
   search --no-floppy --fs-uuid --set=root $boot_uuid
-  linux $subvol/boot/mbp51/daily/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
-  initrd $subvol/boot/mbp51/daily/initramfs-fallback.img
+  linux $subvol/boot/mbp51/$MBP51_BOOT_SUBDIR/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
+  initrd $subvol/boot/mbp51/$MBP51_BOOT_SUBDIR/initramfs-fallback.img
 }
-DAILY_GRUB
+MBP51_TIER_GRUB
 EOF
-sudo install -m755 "$entry" /etc/grub.d/42_mbp51-daily
+sudo install -m755 "$entry" "/etc/grub.d/42_mbp51-$MBP51_TIER"
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 sudo grub-script-check /boot/grub/grub.cfg
-sudo grep -Fq "MacBookPro5,1 Daily (upstream EEVDF)" /boot/grub/grub.cfg
+sudo grep -Fq "$MBP51_GRUB_TITLE" /boot/grub/grub.cfg
 grep -Eq '^GRUB_DEFAULT=.*gnulinux-advanced-.*>gnulinux-linux-lts-advanced-' /etc/default/grub || {
   echo "GRUB default drifted; resolve before rebooting" >&2; exit 1;
 }
-echo "PASS: Daily kernel added beside legacy and LTS; LTS still explicitly configured as default."
-echo "Select Daily manually at GRUB for physical qualification."
+echo "PASS: $MBP51_TIER kernel added beside legacy and LTS; LTS still explicitly configured as default."
+echo "Select $MBP51_TIER manually at GRUB for physical qualification."
