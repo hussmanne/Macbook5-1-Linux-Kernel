@@ -34,11 +34,14 @@ Recent successful hosted evidence for the pinned source and isolated tiers:
 
 - Legacy/Daily baseline compatibility: run `40247554764` succeeded on commit
   `23c8b461`.
-- BORE compatibility: run `40265566020` succeeded on commit `4a1d4442`.
-- Extreme Lab compatibility: run `40265593461` succeeded on commit
-  `4a1d4442`.
-- A second successful tier compatibility run, `40265636808`, also completed
-  on commit `4a1d4442`.
+- BORE compatibility: run `40265593461` succeeded for
+  `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1`.
+- Extreme Lab compatibility: run `40265566020` succeeded for
+  `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1`.
+- Daily compatibility: run `40265628239` succeeded for
+  `7.3.0-mbp51-daily-g21a7f44f-v1`.
+- Legacy v2 compatibility: run `40265636808` succeeded for
+  `7.3.0-mbp51-extreme-g21a7f44f-v2`.
 
 These are compile, link, vermagic, and local-package checks. They do not
 replace a physical Wi-Fi association, suspend/reconnect, or boot test.
