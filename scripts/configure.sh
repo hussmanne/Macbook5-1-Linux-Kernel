@@ -9,6 +9,16 @@ config=./scripts/config
 yes() { "$config" --enable "$1"; }
 mod() { "$config" --module "$1"; }
 no() { "$config" --disable "$1"; }
+set_hz() {
+  local symbol="$1" value="$2" hz
+  for hz in HZ_100 HZ_250 HZ_300 HZ_500 HZ_1000; do
+    if grep -q "^config $hz$" kernel/Kconfig.hz; then
+      no "$hz"
+    fi
+  done
+  yes "$symbol"
+  "$config" --set-val HZ "$value"
+}
 
 # Essential architecture, EFI, ACPI S3, SATA, userspace and runtime power control.
 for s in EFI EFI_STUB PM ACPI SUSPEND CPU_IDLE CPU_FREQ \
@@ -41,20 +51,16 @@ no CGROUP_DEBUG
 if [[ "$MBP51_TIER" == bore ]]; then
   yes SCHED_BORE
   "$config" --set-val MIN_BASE_SLICE_NS 2000000
-  yes HZ_1000
-  "$config" --set-val HZ 1000
+  set_hz HZ_1000 1000
 elif [[ "$MBP51_TIER" == lab ]]; then
   # First Extreme Lab profile: isolate the HZ experiment while preserving every
   # feature recovered after the v1 failures (audio, UPower/userspaces, ACLs,
   # battery/SMC, both GPUs, Wi-Fi, input and thermal paths).
-  yes HZ_250
-  "$config" --set-val HZ 250
+  set_hz HZ_250 250
 elif grep -q '^config HZ_500$' kernel/Kconfig.hz; then
-  yes HZ_500
-  "$config" --set-val HZ 500
+  set_hz HZ_500 500
 else
-  yes HZ_1000
-  "$config" --set-val HZ 1000
+  set_hz HZ_1000 1000
 fi
 # Fixed Penryn Core 2 Duo machine: only two execution cores; retain SMP.
 "$config" --set-val NR_CPUS 2

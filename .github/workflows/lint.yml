@@ -38,7 +38,7 @@ jobs:
             -v "$PWD/.cache/kconfig:/kernel-source-cache" \
             -w /work -e MBP51_CACHE_DIR=/kernel-source-cache \
             archlinux:base-devel bash -euc '
-              pacman -Syu --noconfirm --needed curl bc bison flex
+              pacman -Syu --noconfirm --needed git curl bc bison flex
               bash scripts/check-kconfig.sh
               MBP51_TIER=daily bash scripts/check-kconfig.sh
               MBP51_TIER=bore bash scripts/check-kconfig.sh
