@@ -34,6 +34,9 @@ if [[ "$mode" == --plan ]]; then echo "Read-only; no changes made"; exit 0; fi
   echo "Not the target MacBookPro5,1" >&2; exit 2;
 }
 command -v dracut >/dev/null || { echo "Dracut not installed" >&2; exit 2; }
+for cmd in grub-probe grub-mkrelpath grub-mkconfig grub-script-check; do
+  command -v "$cmd" >/dev/null || { echo "Missing command: $cmd" >&2; exit 2; }
+done
 [[ -s /boot/vmlinuz-linux-lts && -s /boot/initramfs-linux-lts.img &&
    -s /boot/grub/grub.cfg ]] || { echo "Stock LTS rescue entry missing"; exit 2; }
 # GRUB index zero selects the new custom kernel because it sorts ahead of LTS.
@@ -70,15 +73,27 @@ sudo dracut --force --hostonly --kver "$release" /boot/mbp51/initramfs.img
 sudo dracut --force --no-hostonly --kver "$release" /boot/mbp51/initramfs-fallback.img
 [[ -s /boot/mbp51/vmlinuz && -s /boot/mbp51/initramfs.img &&
    -s /boot/mbp51/initramfs-fallback.img ]] || exit 1
+# Ask GRUB how it sees these paths rather than assembling "$subvol/boot/..."
+# by hand: the hand-built form is only correct when /boot is in the same Btrfs
+# subvolume as /, and it failed silently when it was not.
+boot_uuid=$(sudo grub-probe -t fs_uuid /boot/mbp51/vmlinuz)
+boot_fs=$(sudo grub-probe -t fs /boot/mbp51/vmlinuz)
+kernel_path=$(sudo grub-mkrelpath /boot/mbp51/vmlinuz)
+initrd_path=$(sudo grub-mkrelpath /boot/mbp51/initramfs.img)
+initrd_fallback_path=$(sudo grub-mkrelpath /boot/mbp51/initramfs-fallback.img)
 root_uuid=$(findmnt -no UUID /)
-boot_uuid=$(findmnt -T /boot -n -o UUID)
 subvol=$(findmnt -no OPTIONS / | tr ',' '\n' | sed -n 's/^subvol=//p')
-[[ "$boot_uuid" == "$root_uuid" && "$subvol" == /* && "$subvol" != *" "* ]] || {
-  echo "Cannot identify actual Btrfs subvolume and root UUID" >&2; exit 1;
+[[ "$boot_uuid" =~ ^[A-Fa-f0-9-]+$ && "$root_uuid" =~ ^[A-Fa-f0-9-]+$ &&
+   "$boot_fs" =~ ^(btrfs|ext2|ext3|ext4|fat)$ &&
+   "$kernel_path" == /* && "$initrd_path" == /* &&
+   "$initrd_fallback_path" == /* ]] || {
+  echo "GRUB could not resolve the boot paths (uuid=$boot_uuid fs=$boot_fs kernel=$kernel_path)" >&2
+  exit 1
 }
-[[ "$boot_uuid" =~ ^[A-Fa-f0-9-]+$ && "$root_uuid" =~ ^[A-Fa-f0-9-]+$ ]] || {
-  echo "Unexpected root or EFI UUID format"; exit 1;
+[[ "$subvol" == /* && "$subvol" != *" "* ]] || {
+  echo "Cannot identify the Btrfs subvolume of /" >&2; exit 1;
 }
+echo "Boot paths: kernel=$kernel_path  fs=$boot_fs  uuid=$boot_uuid  subvol=$subvol"
 # Dracut handles microcode; no separate Intel microcode image needed.
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
@@ -88,17 +103,17 @@ cat > "$tmp" <<EOF
 cat <<'MBP51_GRUB'
 menuentry 'MacBookPro5,1 experimental Linux 7.4-development v2' --id=mbp51-experimental-v2 {
   insmod part_gpt
-  insmod btrfs
+  insmod $boot_fs
   search --no-floppy --fs-uuid --set=root $boot_uuid
-  linux $subvol/boot/mbp51/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
-  initrd $subvol/boot/mbp51/initramfs.img
+  linux $kernel_path root=UUID=$root_uuid rootflags=subvol=$subvol rw
+  initrd $initrd_path
 }
 menuentry 'MacBookPro5,1 experimental Linux 7.4-development v2 (generic fallback)' --id=mbp51-experimental-v2-fallback {
   insmod part_gpt
-  insmod btrfs
+  insmod $boot_fs
   search --no-floppy --fs-uuid --set=root $boot_uuid
-  linux $subvol/boot/mbp51/vmlinuz root=UUID=$root_uuid rootflags=subvol=$subvol rw
-  initrd $subvol/boot/mbp51/initramfs-fallback.img
+  linux $kernel_path root=UUID=$root_uuid rootflags=subvol=$subvol rw
+  initrd $initrd_fallback_path
 }
 MBP51_GRUB
 EOF

@@ -104,6 +104,7 @@ boot entries: Daily, BORE, and Extreme Lab. See
     ├── BUILD.md
     ├── INSTALL.md
     ├── KCONFIG-PROFILE.md
+    ├── INSTALL-RUNBOOK.md
     └── REVIEW-2026-10-29.md
 ```
 

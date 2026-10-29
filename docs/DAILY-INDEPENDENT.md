@@ -37,6 +37,19 @@ bash install/activate-daily-kernel.sh --plan dist/daily
 bash install/activate-daily-kernel.sh --install dist/daily
 ```
 
+Three installation modes, selectable in any order:
+
+```bash
+bash install/activate-daily-kernel.sh --plan dist/daily                 # verify only
+bash install/activate-daily-kernel.sh --install dist/daily --no-wifi   # bootable, Ethernet
+bash install/activate-daily-kernel.sh --wifi-only dist/daily           # add wl afterwards
+```
+
+`--install` creates the boot entry **before** the proprietary module is built,
+so a Broadcom failure can no longer hide whether the kernel itself boots. A
+kernel qualified over Ethernet is strictly more useful than a package with no
+menu entry.
+
 The installer first checks source/release/artifact hashes, matching LTS
 recovery files, the explicit LTS GRUB default, Btrfs/EFI layout, and DMI.
 After installing the Daily binary and headers, it privately builds and

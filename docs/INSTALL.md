@@ -1,6 +1,9 @@
 # MacBookPro5,1 — recoverable installation and first-boot qualification
 
 **Experimental kernel; no successful physical MacBook boot has been established.**
+For the end-to-end operator sequence (LTS baseline → verify → plan → install →
+first boot → verdict), use [the install runbook](INSTALL-RUNBOOK.md). This page
+is the reference for what each step means and how to recover.
 Never erase a working OS or replace the stock boot entry. These instructions are
 for **an already installed Arch-derived Linux OS**. Do not apply Arch pacman
 packages on MX Linux, macOS, or a different distribution. Use a recovery USB,
@@ -111,6 +114,10 @@ of leaving you with "it didn't work":
 bash scripts/hardware-report.sh | tee "$HOME/mbp51-custom-before-power.txt"
 bash scripts/postboot-check.sh "$HOME/mbp51-audit/postboot-$(uname -r).txt"
 ```
+
+Add `--no-wifi` to `postboot-check.sh` if the kernel was installed without the
+proprietary Broadcom module, so the missing `wl` is reported as a WARN instead
+of a FAIL.
 
 Manually test ACPI S3 suspend/resume and lid-close **only after confirming
 a recovery boot is available**, and repeat the report after resuming.

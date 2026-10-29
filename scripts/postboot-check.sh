@@ -5,11 +5,23 @@
 # outputs are directly comparable. It changes no system state: no suspend, no
 # GPU rail change, no PowerTOP tune, no package install, no boot edit.
 #
-# Usage: bash scripts/postboot-check.sh [OUTPUT_FILE]
+# Usage: bash scripts/postboot-check.sh [OUTPUT_FILE] [--no-wifi]
+#   --no-wifi   the kernel was installed with install/activate-*-kernel.sh
+#               --no-wifi, so a missing wl module is expected. Downgrades that
+#               check from FAIL to WARN; everything else is unchanged.
 # Exit status: 0 = no FAIL, 1 = at least one FAIL (WARN does not fail).
 set -uo pipefail
 
-out=${1:-}
+out=""
+wifi_expected=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-wifi) wifi_expected=0 ;;
+    -h|--help) printf 'Usage: %s [OUTPUT_FILE] [--no-wifi]\n' "$0"; exit 0 ;;
+    --*) printf 'Unknown option: %s\n' "$arg" >&2; exit 2 ;;
+    *) out=$arg ;;
+  esac
+done
 results=()
 fails=0
 warns=0
@@ -111,8 +123,10 @@ if have modinfo && modinfo -k "$rel" -n wl >/dev/null 2>&1; then
   esac
   [[ "$wl_ver" == "$rel "* ]] && ok wl_vermagic "$wl_ver" || fail wl_vermagic "vermagic '$wl_ver' != '$rel'"
   lspci -nn 2>/dev/null | grep -q '14e4:432b' && ok bcm4322 "14e4:432b present" || warn bcm4322 "card not visible"
-else
+elif (( wifi_expected )); then
   fail wl_path "no wl module for $rel - Wi-Fi unavailable on this boot"
+else
+  warn wl_path "no wl module for $rel (expected: installed with --no-wifi)"
 fi
 if have nmcli; then
   timeout -k 2 8 nmcli -t -f DEVICE,TYPE,STATE device 2>/dev/null | sed 's/^/  /' || true

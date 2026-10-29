@@ -4,6 +4,26 @@ cd "$(dirname "$0")/.."
 for script in scripts/*.sh runtime/system-sleep/50-mbp51-powertop compat/broadcom/*.sh install/*.sh; do bash -n "$script"; done
 for script in scripts/benchmark/*.sh; do bash -n "$script"; done
 bash -n tools/mbp51-hardware-survey.sh
+# Installers and wrappers must be executable and must not exec a non-executable
+# file: activate-bore/lab used to `exec` activate-daily-kernel.sh directly, and
+# no installer carried the exec bit in git, so both wrappers failed outright.
+# scripts/tier-profile.sh and scripts/benchmark/common.sh are sourced
+# libraries ("Source this from other scripts"), so they stay 100644.
+for script in install/*.sh scripts/*.sh; do
+  case "$script" in
+    scripts/tier-profile.sh|scripts/benchmark/common.sh) continue ;;
+  esac
+  [[ -x "$script" ]] || { echo "Not executable: $script" >&2; exit 1; }
+done
+grep -q 'exec bash "$root/activate-daily-kernel.sh"' install/activate-bore-kernel.sh
+grep -q 'exec bash "$root/activate-daily-kernel.sh"' install/activate-lab-kernel.sh
+for script in install/activate-daily-kernel.sh install/activate-custom-kernel.sh; do
+  grep -q 'grub-mkrelpath' "$script"
+  grep -q 'grub-probe' "$script"
+  ! grep -qE 'linux \$subvol/boot/' "$script"
+done
+grep -q -- '--no-wifi' install/activate-daily-kernel.sh
+grep -q -- '--no-wifi' scripts/postboot-check.sh
 bash tools/mbp51-hardware-survey.sh --help >/dev/null
 source "$PWD/scripts/tier-profile.sh"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
@@ -25,6 +45,7 @@ source "$PWD/patches/bore.lock"
 [[ "$(sha256sum "$PWD/$BORE_PATCH_FILE" | cut -d' ' -f1)" == "$BORE_PATCH_SHA256" ]]
 grep -q 'git apply --check --whitespace=error' scripts/apply-tier-patches.sh
 bash scripts/test-tier-profiles.sh
+bash scripts/test-installer-modes.sh
 grep -q '^ExecStart=/usr/bin/powertop --auto-tune' runtime/systemd/mbp51-powertop.service
 python3 -m py_compile compat/broadcom/patch-broadcom-wl.py
 echo "Static validation passed; compilation not yet proven."
