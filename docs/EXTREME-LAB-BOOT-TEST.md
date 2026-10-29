@@ -48,6 +48,10 @@ MBP51_TIER=bore bash install/activate-bore-kernel.sh --plan dist/bore
 MBP51_TIER=lab bash install/activate-lab-kernel.sh --plan dist/lab
 ```
 
+For the first physical qualification of a tier, add `--no-wifi` to `--install`
+and prove the kernel over Ethernet. Install the module afterwards with
+`--wifi-only`; the boot entry is created before the vendor module either way.
+
 The installer must leave `linux-lts`, its initramfs, the explicit LTS
 `GRUB_DEFAULT`, and the legacy `/boot/mbp51/` files intact. Each tier uses its
 own package base, module ABI, private Broadcom package, boot directory, and
