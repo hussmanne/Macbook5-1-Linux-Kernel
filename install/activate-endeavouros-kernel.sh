@@ -3,7 +3,8 @@
 # This is separate from the vanilla-Arch mkinitcpio helper.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-source "$repo/source.lock"
+export MBP51_TIER=${MBP51_TIER:-legacy}
+source "$repo/scripts/tier-profile.sh"
 mode=${1:---plan}
 dist=${2:-"$repo/dist"}
 [[ "$mode" == --plan || "$mode" == --install ]] || {
@@ -14,7 +15,7 @@ dist=${2:-"$repo/dist"}
 }
 bash "$repo/scripts/verify-artifacts.sh" "$dist"
 release=$(cat "$dist/kernelrelease.txt")
-[[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
+[[ "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
   echo "Artifact doesn't match pinned source.lock." >&2; exit 2;
 }
 shopt -s nullglob

@@ -6,6 +6,21 @@ hardware and userspace features recovered after the original v1 attempt.
 Voltage writes, GPU rail switching, firmware changes, and raw MSR access are
 not part of this first profile.
 
+> **Measured scope.** Resolved from the pinned source, Lab differs from Daily
+> by exactly two symbols (`CONFIG_HZ_250=y`, `CONFIG_HZ=250`). It is a tick-rate
+> experiment, not a hardware-lab codebase, and it must not be described as one.
+>
+> **What HZ=250 can show.** Preemption granularity under load: with
+> `PREEMPT_LAZY` the tick is the preemption point, so a lower HZ should cost
+> up to ~4 ms of additional wakeup-to-run delay on a saturated two-core
+> machine. That is a measurable *latency* hypothesis.
+>
+> **What it cannot show.** Idle power. `NO_HZ_IDLE` already stops the periodic
+> tick in idle, so the tick rate does not change idle residency or idle watts.
+> Do not schedule power experiments on this profile; the free alternative is a
+> `scaling_governor` comparison (`schedutil` / `ondemand` / `conservative` /
+> `powersave`) on an unchanged Daily kernel, which needs no rebuild at all.
+
 ## Boot targets
 
 Keep these entries available before testing:
@@ -14,9 +29,9 @@ Keep these entries available before testing:
 |---|---|---|---|
 | Recovery | `linux-lts` | distro ABI | Known-good recovery and comparison baseline |
 | Existing | Legacy experimental | `linux-mbp51-extreme` | Previously booted custom kernel evidence |
-| Tier 1 | Daily | `7.3.0-mbp51-daily-g21a7f44f-v1` | Upstream EEVDF, 1000 Hz reference |
-| Tier 2 | BORE | `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1` | BORE scheduler, 1000 Hz, default-off runtime mode |
-| Tier 3 | Extreme Lab | `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1` | Feature-preserving 250 Hz experiment |
+| Tier 1 | Daily | `7.3.0-mbp51-daily-g21a7f44f-v1-c2-c2` | Upstream EEVDF, 1000 Hz reference |
+| Tier 2 | BORE | `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1-c2-c2` | BORE scheduler, 1000 Hz, default-off runtime mode |
+| Tier 3 | Extreme Lab | `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1-c2-c2` | Feature-preserving 250 Hz experiment |
 
 The minimum experimental comparison is **Daily + BORE + Lab**, with LTS kept
 as recovery. Preserving the existing legacy entry gives an additional known
@@ -40,8 +55,10 @@ GRUB IDs.
 
 ## Per-boot acceptance
 
-Record the output of `scripts/compare-kernels.sh` tagged by `uname -r`, then
-check the following before moving to the next kernel:
+Record the output of `scripts/compare-kernels.sh` tagged by `uname -r`, and run
+`bash scripts/postboot-check.sh "$HOME/mbp51-audit/postboot-$(uname -r).txt"`
+for a PASS/WARN/FAIL verdict on the same list. Every FAIL blocks promotion of
+that entry. Then check the following before moving to the next kernel:
 
 - reaches the graphical login and returns from a normal reboot;
 - `USER_NS`, `MEMCG`, `PSI`, Btrfs ACL support, and zram configuration;

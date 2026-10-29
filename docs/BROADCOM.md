@@ -3,7 +3,8 @@
 ## Verified build facts
 
 GitHub Actions previously compiled Arch's `broadcom-wl-dkms` vendor source
-6.30.223.271 against the then-pinned kernel 7.3.0-mbp51-extreme after
+6.30.223.271 against the then-pinned legacy kernel (suffix without the
+current `-c2` configuration revision) after
 applying strict source-locked compatibility edits. The latest 7.4 development
 source **must pass its own full build and DKMS run** before being treated as
 compatible. A compile/link pass is not a real Wi-Fi scan/connect/resume test.
@@ -35,13 +36,13 @@ Recent successful hosted evidence for the pinned source and isolated tiers:
 - Legacy/Daily baseline compatibility: run `40247554764` succeeded on commit
   `23c8b461`.
 - BORE compatibility: run `40265593461` succeeded for
-  `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1`.
+  `7.3.0-mbp51-bore-g21a7f44f-bore7.0.0-r1-c2-c2`.
 - Extreme Lab compatibility: run `40265566020` succeeded for
-  `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1`.
+  `7.3.0-mbp51-lab-g21a7f44f-lab-hz250-r1-c2-c2`.
 - Daily compatibility: run `40265628239` succeeded for
-  `7.3.0-mbp51-daily-g21a7f44f-v1`.
+  `7.3.0-mbp51-daily-g21a7f44f-v1-c2-c2`.
 - Legacy v2 compatibility: run `40265636808` succeeded for
-  `7.3.0-mbp51-extreme-g21a7f44f-v2`.
+  `7.3.0-mbp51-extreme-g21a7f44f-v2-c2`.
 
 These are compile, link, vermagic, and local-package checks. They do not
 replace a physical Wi-Fi association, suspend/reconnect, or boot test.

@@ -43,10 +43,15 @@ DO NOT use the legacy shared 'linux-mbp51-extreme' package name:
 installing a new version removes prior version's files and can replace
 /usr/lib/modules even though the GRUB menu appears to keep both.
 
-Unique LOCALVERSION per tier (for a fixed source_sha):
-  -mbp51-daily-g<SHA8>
-  -mbp51-bore-g<SHA8>-<PATCHREV>
-  -mbp51-lab-g<SHA8>-<PATCHREV>
+Unique LOCALVERSION per tier (for a fixed source_sha). The trailing `-c<N>`
+is MBP51_CONFIG_REV from source.lock and MUST be bumped whenever
+scripts/configure.sh changes; a new .config under an old release string would
+silently mismatch a previously built external module.
+  -mbp51-daily-g<SHA8>-v1-c<N>
+  -mbp51-bore-g<SHA8>-<PATCHREV>-c<N>
+  -mbp51-lab-g<SHA8>-<PATCHREV>-c<N>
+All of them are produced by scripts/tier-profile.sh; no script may hard-code a
+release string.
 
 Unique boot folders:
   /boot/mbp51/daily/vmlinuz and initramfs.img + initramfs-fallback.img
@@ -83,9 +88,15 @@ Everything tier1 needs to be functional, including both NVIDIA GPUs and
 private Broadcom. The current local BORE v7.0.0 port targets the EXACT pinned
 7.4-development source (kernel/sched/fair.c changed) in an isolated locked
 patch series; it records provenance and fails on unresolved hunks. BORE's
-optional runtime sysctl `kernel.sched_bore` (0=EEVDF-style behavior, 1=BORE)
-is compiled in but initially default off. CI compilation, matching Broadcom
-compatibility, and physical qualification remain release gates.
+optional runtime sysctl `kernel.sched_bore` is compiled in but starts
+disabled (0). **0 is not an EEVDF-equivalent control.** Because
+`CONFIG_SCHED_BORE` is compiled in, the same build also replaces EEVDF's
+tunable scaling (`NONE` instead of `LOG`) and its base-slice constants
+(request size 2 ms vs 1.4 ms; `set_protect_slice()` window 2 ms vs 0.7 ms).
+Daily-versus-BORE(0) is therefore a scheduler-*configuration* comparison, not
+a patch/no-patch control. Use the three-arm protocol in
+`docs/BORE-INDEPENDENT.md`. CI compilation, matching Broadcom compatibility,
+and physical qualification remain release gates.
 No claim of performance until input-latency, fork-heavy and throughput
 stress pass. No sched_ext/BTF burden in this tier by default. Experiment
 250Hz HZ versus 1000Hz only if a benchmark justifies it; don't change

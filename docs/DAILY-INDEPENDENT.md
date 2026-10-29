@@ -10,7 +10,7 @@ experiments remain separate from the first bootable Lab profile.
 
 `MBP51_TIER=daily` selects:
 - pkgbase `linux-mbp51-daily` and matching `linux-mbp51-daily-headers`;
-- release `7.3.0-mbp51-daily-g21a7f44f-v1`;
+- release `7.3.0-mbp51-daily-g21a7f44f-v1-c2-c2`;
 - separate artifact directory `dist/daily`;
 - private local-only `mbp51-broadcom-wl-daily` depending on the Daily kernel;
 - boot path `/boot/mbp51/daily`;

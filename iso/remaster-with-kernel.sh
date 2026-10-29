@@ -9,7 +9,10 @@ test "$(basename "$ORIGINAL_ISO")" = EndeavourOS_Titan-Nova-2026.08.15.iso
 echo "3f83bd745e9d5d518bdf6fc9a24092fb5347da449a6e109c6572bf999097b8b548c4cf1848fdfb3c7c2823f558c3f5b51a127060d9c5b81b9ad89b4041bee7fa  $ORIGINAL_ISO" | sha512sum -c -
 bash "$root/scripts/verify-artifacts.sh" "$DIST_DIR"
 K=$(cat "$DIST_DIR/kernelrelease.txt")
-test "$K" = 7.3.0-mbp51-extreme-g21a7f44f
+MBP51_TIER=${MBP51_TIER:-legacy}
+source "$root/scripts/tier-profile.sh"
+# The ISO kit must carry exactly the tier ABI this checkout would build.
+test "$K" = "$MBP51_KERNEL_RELEASE"
 mkdir -p "$OUTPUT_DIR/kit/dist" "$OUTPUT_DIR/tmp"
 git -C "$root" archive HEAD | tar -xf - -C "$OUTPUT_DIR/kit"
 cp -a "$DIST_DIR"/. "$OUTPUT_DIR/kit/dist/"

@@ -3,4 +3,16 @@
 SOURCE_SHA=21a7f44fd0765fcc5194130b28767786eba1d1e7
 SOURCE_ARCHIVE_SHA256=1af6d999723ab2309946456e6a38953583a087c720be98295224e3ddbb384295
 SOURCE_REPO=https://github.com/torvalds/linux
-KERNEL_LOCALVERSION=-mbp51-extreme-g21a7f44f-v2
+# Upstream VERSION.PATCHLEVEL.SUBLEVEL of the pinned Makefile. Single source of
+# truth: no script may hard-code this string.
+KERNEL_VERSION=7.3.0
+# Configuration revision. Bump for ANY change in scripts/configure.sh, because
+# a different .config under an identical vermagic string silently mismatches a
+# previously built external module (HZ and struct layouts are not in vermagic).
+#   c1  initial legacy/Daily/BORE/Lab configuration
+#   c2  trimmed + hardware-complete base: framebuffer console, IKCONFIG,
+#       coretemp, Apple IR, TEO idle governor; virtio/9p/PCCARD/NUMA/SELinux/
+#       unused NICs and scheduler-debug counters removed
+MBP51_CONFIG_REV=c2
+# Legacy tier suffix. Daily/BORE/Lab suffixes live in scripts/tier-profile.sh.
+MBP51_LEGACY_SUFFIX=-mbp51-extreme-g21a7f44f-v2

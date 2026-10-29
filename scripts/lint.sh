@@ -8,7 +8,9 @@ bash tools/mbp51-hardware-survey.sh --help >/dev/null
 source "$PWD/scripts/tier-profile.sh"
 [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
 [[ "$SOURCE_ARCHIVE_SHA256" =~ ^[0-9a-f]{64}$ ]]
-[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2" ]]
+[[ "$KERNEL_LOCALVERSION" == "-mbp51-extreme-g${SOURCE_SHA:0:8}-v2-${MBP51_CONFIG_REV}" ]]
+[[ "$KERNEL_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+[[ "$MBP51_KERNEL_RELEASE" == "$KERNEL_VERSION$KERNEL_LOCALVERSION" ]]
 grep -q 'no CPU_MITIGATIONS' scripts/configure.sh
 grep -q 'no ZSWAP' scripts/configure.sh
 grep -q 'CPU_MITIGATIONS' scripts/audit-config.sh
