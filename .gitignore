@@ -4,3 +4,5 @@ dist/
 *.pkg.tar.zst
 *.pkg.tar.zst.sig
 *.log
+__pycache__/
+*.pyc

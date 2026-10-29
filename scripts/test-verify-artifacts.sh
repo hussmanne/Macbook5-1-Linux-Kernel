@@ -10,7 +10,7 @@ if [[ "$MBP51_TIER" == bore ]]; then
 elif [[ "$MBP51_TIER" == lab ]]; then
   source "$root/patches/lab.lock"
 fi
-release="7.3.0$KERNEL_LOCALVERSION"
+release="$MBP51_KERNEL_RELEASE"
 version="${release//-/_}"
 printf '%s\n' "$release" > "$temp/kernelrelease.txt"
 printf 'source_commit=%s\nkernel_release=%s\nkernel_tier=%s\npkgbase=%s\n' \

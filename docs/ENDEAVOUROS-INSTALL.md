@@ -64,7 +64,7 @@ not distributed in our public CI artifact.
 
 ## Qualification
 
-The custom kernel ABI is 7.3.0-mbp51-extreme-g21a7f44f because the pinned
+The custom kernel ABI is 7.3.0-mbp51-extreme-g21a7f44f-v2-c2 because the pinned
 Linux 7.4 development snapshot still reports 7.3.0 in its Makefile.
 It is not the 7.4 tagged release.
 

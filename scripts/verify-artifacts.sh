@@ -10,8 +10,9 @@ done
 release=$(< "$dist/kernelrelease.txt")
 source "$root/scripts/tier-profile.sh"
 [[ "$release" =~ ^[0-9][0-9A-Za-z._+-]*$ &&
-   "$release" == *"$KERNEL_LOCALVERSION" ]] || {
-  echo "Unexpected kernel release: $release" >&2; exit 1;
+   "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
+  echo "Unexpected kernel release: $release (expected $MBP51_KERNEL_RELEASE)" >&2
+  exit 1
 }
 grep -Fxq "kernel_release=$release" "$dist/build-manifest.txt" || {
   echo "Kernel release disagrees with build manifest" >&2; exit 1;

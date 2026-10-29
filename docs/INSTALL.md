@@ -105,9 +105,11 @@ Boot the new entry with AC connected. First verify `uname -r` matches
 display/backlight and both Nouveau renderers, Apple keyboard/trackpad and SMC
 temperatures, SATA storage/errors, forcedeth Ethernet, `wl` radio and WPA2
 scanning/association, audio, webcam, Bluetooth, and system shutdown.
-Capture:
+Capture the full acceptance report, which names each failed component instead
+of leaving you with "it didn't work":
 ```bash
 bash scripts/hardware-report.sh | tee "$HOME/mbp51-custom-before-power.txt"
+bash scripts/postboot-check.sh "$HOME/mbp51-audit/postboot-$(uname -r).txt"
 ```
 
 Manually test ACPI S3 suspend/resume and lid-close **only after confirming

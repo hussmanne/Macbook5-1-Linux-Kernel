@@ -75,16 +75,43 @@ capture_metadata() {
       awk -F= '/^(SOURCE_SHA|SOURCE_ARCHIVE_SHA256)=/ { print tolower($1) "=" $2 }' \
         "$repo_root/source.lock"
     fi
-    config_file="/boot/config-$(uname -r)"
+    # Config identity must survive on this machine: the custom kernels have
+    # CONFIG_IKCONFIG_PROC unset and Arch packaging installs no /boot/config-*,
+    # so fall back to the headers tree the package does install.
+    config_file=""
+    config_source="unavailable"
     if [[ -r /proc/config.gz ]] && command -v zcat >/dev/null 2>&1; then
       zcat /proc/config.gz > "$out/.config.capture"
       config_file="$out/.config.capture"
+      config_source="proc_config_gz"
     fi
-    if [[ -r "$config_file" ]]; then
+    if [[ -z "$config_file" && -r "/boot/config-$(uname -r)" ]]; then
+      config_file="/boot/config-$(uname -r)"
+      config_source="boot_config"
+    fi
+    if [[ -z "$config_file" && -r "/usr/lib/modules/$(uname -r)/build/.config" ]]; then
+      config_file="/usr/lib/modules/$(uname -r)/build/.config"
+      config_source="modules_build"
+    fi
+    if [[ -n "$config_file" && -r "$config_file" ]]; then
       config_hash=$(sha256sum "$config_file" | cut -d' ' -f1)
       printf 'config_sha256=%s\n' "$config_hash"
     else
       printf 'config_sha256=unavailable\n'
+    fi
+    printf 'config_source=%s\n' "$config_source"
+    # Record whether the power and thermal columns can mean anything at all.
+    if compgen -G '/sys/class/power_supply/BAT*' >/dev/null; then
+      printf 'power_now_source=power_supply_bat\n'
+    else
+      printf 'power_now_source=unavailable_no_battery\n'
+    fi
+    if compgen -G '/sys/class/thermal/thermal_zone*/temp' >/dev/null; then
+      printf 'thermal_source=thermal_zone\n'
+    elif compgen -G '/sys/class/hwmon/hwmon*/temp*_input' >/dev/null; then
+      printf 'thermal_source=hwmon_only\n'
+    else
+      printf 'thermal_source=unavailable\n'
     fi
     printf 'power_profile=%s\n' "$(command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl get 2>/dev/null || true)"
   } > "$out/metadata.txt"
@@ -110,6 +137,11 @@ append_sample() {
   ctxt=$(cpu_context_switches)
   psi=$(memory_psi_avg10 || true)
   temp=$(max_sysfs_glob '/sys/class/thermal/thermal_zone*/temp')
+  # MacBookPro5,1 has no ACPI thermal zone on the CPU package; applesmc and
+  # coretemp expose the same milli-degree values through hwmon.
+  if [[ "$temp" == "0" ]]; then
+    temp=$(max_sysfs_glob '/sys/class/hwmon/hwmon*/temp*_input')
+  fi
   fan=$(max_sysfs_glob '/sys/class/hwmon/hwmon*/fan*_input')
   power=$(sum_sysfs_glob '/sys/class/power_supply/BAT*/power_now')
   ac=$(read_first_line /sys/class/power_supply/ADP1/online || true)

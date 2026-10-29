@@ -15,7 +15,7 @@ dist=${2:-"$root/dist/$MBP51_TIER"}
 [[ "$EUID" != 0 ]] || { echo "Run as an ordinary user." >&2; exit 2; }
 bash "$root/scripts/verify-artifacts.sh" "$dist"
 release=$(< "$dist/kernelrelease.txt")
-[[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
+[[ "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
   echo "Unexpected $MBP51_TIER ABI: $release" >&2; exit 2;
 }
 shopt -s nullglob

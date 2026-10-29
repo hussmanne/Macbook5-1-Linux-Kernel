@@ -2,7 +2,8 @@
 # Separate experimental kernel entry; LTS always remains GRUB default.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-source "$repo/source.lock"
+export MBP51_TIER=${MBP51_TIER:-legacy}
+source "$repo/scripts/tier-profile.sh"
 mode=--plan
 dist="$repo/dist"
 [[ $# -lt 1 ]] || mode="$1"
@@ -13,7 +14,7 @@ dist="$repo/dist"
 [[ "$EUID" -ne 0 ]] || { echo "Run as ordinary user, sudo handles install"; exit 2; }
 bash "$repo/scripts/verify-artifacts.sh" "$dist"
 release=$(cat "$dist/kernelrelease.txt")
-[[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
+[[ "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
   echo "Wrong pinned release: $release" >&2; exit 2;
 }
 shopt -s nullglob

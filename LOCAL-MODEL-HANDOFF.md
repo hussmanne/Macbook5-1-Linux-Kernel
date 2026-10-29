@@ -1,3 +1,9 @@
+> **Historical snapshot (2026-10-25).** Every kernel ABI string below predates
+> configuration revision `c2` and is kept for provenance only. The current
+> ABIs live in `scripts/tier-profile.sh` / `source.lock`, and the current
+> hardware profile is documented in `docs/KCONFIG-PROFILE.md`. Do not copy
+> ABI strings out of this file.
+
 # Local model handoff — MacBookPro5,1 kernel engineering
 
 **Snapshot:** 2026-10-25. **Owner intent:** aggressively optimize a late-2008 dual-core MacBook Pro for responsiveness, useful battery life, and small footprint; preserve independently bootable Daily/BORE/Extreme experiments and **keep both GPUs available**. No personal files on the SSD need preserving, but **do not format the disk just because a wipe was allowed**: the existing Btrfs/EFI install passed read-only multikernel preflight and is a valuable recovery baseline.

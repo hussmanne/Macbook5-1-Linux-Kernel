@@ -62,7 +62,12 @@ count=$(find "$out" -maxdepth 1 -name '*.pkg.tar.zst' -type f | wc -l)
 # generated release the packaging step actually installed its modules under.
 [[ -s include/config/kernel.release ]] || { echo "Missing built kernel release" >&2; exit 1; }
 release=$(< include/config/kernel.release)
-[[ "$release" == *"$KERNEL_LOCALVERSION" ]] || { echo "Unexpected built release: $release" >&2; exit 1; }
+# Exact match: catches a source Makefile bump that source.lock did not record,
+# and a LOCALVERSION that lost its configuration revision.
+[[ "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
+  echo "Unexpected built release: $release (expected $MBP51_KERNEL_RELEASE)" >&2
+  exit 1
+}
 printf '%s\n' "$release" > "$out/kernelrelease.txt"
 patch_sha256=$(awk -F= '$1 == "patch_sha256" { print $2; exit }' "$patch_manifest")
 printf 'source_commit=%s\nkernel_release=%s\nsource_archive_sha256=%s\n' \

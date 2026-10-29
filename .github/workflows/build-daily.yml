@@ -4,7 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - 'source.lock'
       - 'scripts/tier-profile.sh'
+      - 'scripts/check-kconfig.sh'
       - 'scripts/build.sh'
       - 'scripts/configure.sh'
       - 'scripts/audit-config.sh'

@@ -34,11 +34,21 @@ if (root / "patches/lab.lock").is_file():
             profile[key] = value
 # Accept ONLY the exact local ABIs defined for this source; never permit an
 # arbitrary KERNELRELEASE just because it happens to share the pinned SHA.
+# Derived from source.lock + the patch locks (the same values
+# scripts/tier-profile.sh uses) so an ABI bump cannot leave a stale copy here.
+kv = profile.get("KERNEL_VERSION", "")
+cr = profile.get("MBP51_CONFIG_REV", "")
+legacy = profile.get("MBP51_LEGACY_SUFFIX", "")
+if not (kv and cr and legacy and profile.get("BORE_PATCH_REV") and
+        profile.get("LAB_PROFILE_REV")):
+    sys.exit("source.lock/patches locks are missing KERNEL_VERSION, "
+             "MBP51_CONFIG_REV, MBP51_LEGACY_SUFFIX, BORE_PATCH_REV or "
+             "LAB_PROFILE_REV; refusing to guess a kernel ABI")
 allowed_releases = {
-    "7.3.0-mbp51-extreme-g" + locked_sha[:8] + "-v2",
-    "7.3.0-mbp51-daily-g" + locked_sha[:8] + "-v1",
-    "7.3.0-mbp51-bore-g" + locked_sha[:8] + "-" + profile.get("BORE_PATCH_REV", ""),
-    "7.3.0-mbp51-lab-g" + locked_sha[:8] + "-" + profile.get("LAB_PROFILE_REV", ""),
+    kv + legacy + "-" + cr,
+    kv + "-mbp51-daily-g" + locked_sha[:8] + "-v1-" + cr,
+    kv + "-mbp51-bore-g" + locked_sha[:8] + "-" + profile["BORE_PATCH_REV"] + "-" + cr,
+    kv + "-mbp51-lab-g" + locked_sha[:8] + "-" + profile["LAB_PROFILE_REV"] + "-" + cr,
 }
 if release not in allowed_releases:
     sys.exit("Unsupported locked development-kernel release: " + release +

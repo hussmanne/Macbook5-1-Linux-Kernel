@@ -12,6 +12,22 @@ package/module/boot identities. Hosted CI is the compile and provenance gate;
 physical boot testing is intentionally multi-kernel. Never remove LTS or test
 an experimental tier as the only bootable kernel.
 
+All three tiers are built from **one** hardware profile
+([docs/KCONFIG-PROFILE.md](docs/KCONFIG-PROFILE.md)): same source pin, same
+`.config`, same installer, same Broadcom tooling. Resolved from
+`scripts/configure.sh`, Daily-vs-BORE differs by two configuration symbols and
+Daily-vs-Lab differs by two. They separate *experiments*, not *risk* — `linux-lts`
+is the only independent fallback on the machine. The tier list, the ABI strings
+and the boot-probability analysis are in
+[docs/REVIEW-2026-10-29.md](docs/REVIEW-2026-10-29.md).
+
+Configuration revision `c2` trims what cannot exist on a MacBookPro5,1
+(virtio/9p guest stack, eight unused NICs, PCCARD, NUMA, i915, AGP,
+`SCHEDSTATS`, `KALLSYMS_ALL`) and restores what an EndeavourOS desktop needs but
+`x86_64_defconfig` omits (framebuffer console, nf_tables, FUSE, overlayfs,
+AppArmor, BPF, `coretemp`, Apple IR). Every ABI string is derived from
+`source.lock`; nothing hard-codes a version.
+
 Upstream is pinned to a full Git SHA in [source.lock](source.lock). Our reviewed 7.4 development snapshot still identifies itself as **7.3.0** in its upstream Makefile, with a unique source-specific local version suffix. This is not a released or tagged 7.4 kernel.
 
 ### Tested laptop baseline
@@ -86,7 +102,9 @@ boot entries: Daily, BORE, and Extreme Lab. See
 └── docs/
     ├── ENGINEERING.md
     ├── BUILD.md
-    └── INSTALL.md
+    ├── INSTALL.md
+    ├── KCONFIG-PROFILE.md
+    └── REVIEW-2026-10-29.md
 ```
 
 Important: CI passing means packages were built and audited, and the matching
@@ -110,7 +128,7 @@ This is separate from first-boot qualification.
 
 The patched proprietary Broadcom module can now be compiled **locally** and
 packaged as a normal, version-locked `mbp51-broadcom-wl` Arch package:
-`bash compat/broadcom/make-local-package.sh 7.3.0-mbp51-extreme-g21a7f44f`.
+`bash compat/broadcom/make-local-package.sh 7.3.0-mbp51-extreme-g21a7f44f-v2-c2`.
 No vendor binary is published by our public CI. The boot image and module
 package must share the exact `kernelrelease.txt` value. Installation is
 deferred until the machine's boot partition and known-good recovery entry

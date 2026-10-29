@@ -7,8 +7,8 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 source "$root/scripts/tier-profile.sh"
 release=${1:-}
 [[ "$EUID" -ne 0 ]] || { echo "Run as a regular user, never root." >&2; exit 2; }
-[[ "$release" == "7.3.0$KERNEL_LOCALVERSION" ]] || {
-  echo "Expected release 7.3.0$KERNEL_LOCALVERSION" >&2; exit 2;
+[[ "$release" == "$MBP51_KERNEL_RELEASE" ]] || {
+  echo "Expected release $MBP51_KERNEL_RELEASE" >&2; exit 2;
 }
 [[ $# -le 2 ]] || { echo "Usage: $0 KERNELRELEASE [EXISTING_WL_KO]" >&2; exit 2; }
 for tool in makepkg bsdtar modinfo sha256sum; do
