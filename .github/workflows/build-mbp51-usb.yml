@@ -1,11 +1,27 @@
 name: Build EndeavourOS USB with preloaded MBP51 kernel
+# The ISO bundle embeds one exact kernel ABI, so it must always be built from a
+# matching artifact. The run ID used to be hard-coded (40182567735, the v1
+# build); once the configuration revision or source pin moved, the download
+# still succeeded but scripts/verify-artifacts.sh correctly rejected the stale
+# ABI and the job failed. Resolve the source run dynamically instead.
 on:
   workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Successful 'Build experimental MBP5,1 kernel' run ID (blank = latest successful)"
+        required: false
+        type: string
+        default: ""
   push:
     branches: [main]
     paths:
       - '.github/workflows/build-mbp51-usb.yml'
       - 'iso/**'
+  # Follow the kernel that gets embedded: rebuild the USB when that build lands.
+  workflow_run:
+    workflows:
+      - "Build experimental MBP5,1 kernel"
+    types: [completed]
 permissions:
   contents: read
   actions: read
@@ -14,6 +30,11 @@ concurrency:
   cancel-in-progress: true
 jobs:
   remix:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     steps:
@@ -26,13 +47,32 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends xorriso
           df -h .
+      - name: Resolve source kernel run
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          run_id="${EVENT_RUN_ID:-${INPUT_RUN_ID:-}}"
+          if [[ -z "$run_id" ]]; then
+            run_id=$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/workflows/build-kernel.yml/runs?branch=main&status=success&per_page=1" \
+              --jq '.workflow_runs[0].id')
+          fi
+          [[ "$run_id" =~ ^[0-9]+$ ]] || { echo "No usable kernel run id" >&2; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Using kernel artifacts from run $run_id"
       - uses: actions/download-artifact@v4
         with:
-          run-id: 40182567735
+          run-id: ${{ steps.resolve.outputs.run_id }}
           name: mbp51-kernel-and-headers
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: payload/dist
       - name: Verify kernel and headers
+        # Fails loudly if the resolved run predates the current source pin or
+        # configuration revision; never bundle a mismatched ABI on the USB.
         run: bash scripts/verify-artifacts.sh payload/dist
       - name: Download and verify official EndeavourOS ISO
         run: |
