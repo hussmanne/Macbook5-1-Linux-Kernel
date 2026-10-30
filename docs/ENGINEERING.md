@@ -92,12 +92,19 @@ pcie_aspm=force, unsafe SATA aggressive ALPM, disabling interrupt timers, or
 automatic vga_switcheroo discrete-rail power-off.
 
 Memory: MGLRU, ZRAM_BACKEND_LZ4=y and ZRAM_DEF_COMP_LZ4=y, not merely
-CRYPTO_LZ4=y. The first compiled version incorrectly forced LZO-RLE, which
-would reject the requested LZ4 userspace setting. The corrected userspace
-zram-generator creates up to
-4 GiB of logical compressed swap, swappiness 100, page-cluster 0. No disk
-hibernation: suspend-to-RAM already worked in MX. No promise of improved power
-from compressed swap when RAM is not pressured.
+CRYPTO_LZ4=y. What matters is the set of compiled-in *backends*: in zram_drv.c,
+`default_compressor = CONFIG_ZRAM_DEF_COMP` is only the initial value, and
+`comp_algorithm_store()` accepts any backend that was built, failing only when
+the backend is absent. (An earlier revision of this file claimed that forcing
+LZO-RLE would *reject* the LZ4 userspace setting; that mechanism does not
+exist. `ZRAM_DEF_COMP` is a default, not a filter.) The consequence is that
+`no ZRAM_BACKEND_LZO` costs an experiment rather than a correctness change — it
+is why lzo-rle cannot be tried without a rebuild. The userspace zram-generator
+creates up to 4 GiB of logical compressed swap, swappiness 100, page-cluster 0.
+No disk hibernation: suspend-to-RAM already worked in MX. No promise of
+improved power from compressed swap when RAM is not pressured. Sizing, the
+swapfile constraint list and the compressor trade-off are in
+[MEMORY-AND-SWAP.md](MEMORY-AND-SWAP.md).
 
 SSD: preserve NCQ/AHCI/TRIM, use weekly fstrim after installation, sensible
 mq-deadline initial I/O scheduler. Btrfs snapshots/optional zstd:1 may be
