@@ -34,7 +34,7 @@ source "$PWD/scripts/tier-profile.sh"
 grep -q 'no CPU_MITIGATIONS' scripts/configure.sh
 grep -q 'no ZSWAP' scripts/configure.sh
 grep -q 'CPU_MITIGATIONS' scripts/audit-config.sh
-for feature in USER_NS MEMCG PSI BTRFS_FS_POSIX_ACL SND_HDA_CODEC_REALTEK ACPI_SBS; do
+for feature in USER_NS MEMCG PSI SWAP BTRFS_FS_POSIX_ACL SND_HDA_CODEC_REALTEK ACPI_SBS; do
   grep -q "$feature" scripts/configure.sh
   grep -q "$feature" scripts/audit-config.sh
 done
@@ -46,6 +46,7 @@ source "$PWD/patches/bore.lock"
 grep -q 'git apply --check --whitespace=error' scripts/apply-tier-patches.sh
 bash scripts/test-tier-profiles.sh
 bash scripts/test-installer-modes.sh
+bash scripts/test-power-idle.sh
 grep -q '^ExecStart=/usr/bin/powertop --auto-tune' runtime/systemd/mbp51-powertop.service
 python3 -m py_compile compat/broadcom/patch-broadcom-wl.py
 echo "Static validation passed; compilation not yet proven."

@@ -212,6 +212,17 @@ Manual checks, in this order — stop at the first hard failure:
 7. Shutdown completes
 8. **Last:** `systemctl suspend`, manual resume, lid close/open, Wi-Fi reconnect
 
+Power baseline, once the machine has passed the checks above — on battery, and
+with nothing else running:
+
+```bash
+sudo ./scripts/power-idle.sh --label stock --seconds 300 --out /var/tmp/power.csv
+```
+
+That watt figure is the baseline every tweak in
+[docs/POWER-PERF-2026-10-29.md](POWER-PERF-2026-10-29.md) is measured against.
+Do not apply any of them before it exists.
+
 ---
 
 ## Phase 5 — decide
