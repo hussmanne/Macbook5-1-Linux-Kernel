@@ -200,6 +200,10 @@ if compgen -G "/sys/class/hwmon/hwmon*/fan*_input" >/dev/null; then
 else
   warn fans "no fan tachometer exposed (applesmc not loaded?)"
 fi
+# zram is the machine's only swap. Report *why* it is missing rather than a
+# generic warning: "kernel cannot do it" and "nobody deployed the userspace
+# config" are different problems with different fixes, and this gate is where
+# an operator looks first.
 if swapon --show=NAME,ALGORITHM 2>/dev/null | grep -q zram; then
   note "  $(swapon --show=NAME,ALGORITHM 2>/dev/null | tr '\n' ' ')"
   if [[ -r /sys/block/zram0/comp_algorithm ]] &&
@@ -208,8 +212,44 @@ if swapon --show=NAME,ALGORITHM 2>/dev/null | grep -q zram; then
   else
     warn zram "zram active but not using lz4: $(first_line /sys/block/zram0/comp_algorithm)"
   fi
+elif [[ ! -e /sys/block/zram0 ]]; then
+  warn zram "no zram0 device: the zram module did not load or CONFIG_ZRAM is off"
+elif [[ ! -e /etc/systemd/zram-generator.conf ]]; then
+  warn zram "zram module present, no config deployed: run install/apply-runtime.sh"
 else
-  warn zram "no zram swap active (zram-generator not deployed?)"
+  warn zram "config deployed but inactive: systemctl status systemd-zram-setup@zram0"
+fi
+# Memory tunables. The installer deploys these; nothing used to read them back,
+# so a sysctl.d file that silently failed to load was invisible.
+if [[ -r /proc/sys/vm/swappiness ]]; then
+  swappiness=$(first_line /proc/sys/vm/swappiness)
+  case $swappiness in
+    100) ok swappiness "vm.swappiness=$swappiness (zram)";;
+    60)  warn swappiness "vm.swappiness=$swappiness (default); 99-mbp51-memory.conf not applied";;
+    *)   note "  vm.swappiness=$swappiness (non-default; confirm this is deliberate)";;
+  esac
+fi
+for tunable in page-cluster watermark_boost_factor watermark_scale_factor; do
+  # /proc/sys/vm uses the literal sysctl names, hyphens included
+  # (page-cluster, not page_cluster); rewriting them silently skipped checks.
+  file="/proc/sys/vm/$tunable"
+  [[ -r $file ]] || continue
+  case $tunable in
+    page-cluster) expected=0 ;;
+    watermark_boost_factor) expected=0 ;;
+    watermark_scale_factor) expected=125 ;;
+  esac
+  actual=$(first_line "$file")
+  [[ $actual == "$expected" ]] ||
+    warn "vm_${tunable//_/-}" "vm.$tunable=$actual, expected $expected (99-mbp51-memory.conf not applied)"
+done
+# Deferred is different from forgotten: record which one this machine is.
+if have systemctl; then
+  if systemctl --quiet is-enabled mbp51-powertop.service 2>/dev/null; then
+    ok powertop_unit "mbp51-powertop.service enabled"
+  else
+    note "  mbp51-powertop.service disabled (deferred power tuning, not a defect)"
+  fi
 fi
 [[ -r /proc/pressure/memory ]] && ok psi_sample "$(grep '^some' /proc/pressure/memory | head -n 1)"
 

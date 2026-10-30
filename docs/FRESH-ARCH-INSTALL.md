@@ -85,7 +85,11 @@ Do not try the custom kernel before the baseline LTS boot works.
 After confirming the custom boot, apply requested global startup/resume
 PowerTOP tuning:
 
-    sudo systemctl enable --now mbp51-powertop.service
+    sudo bash install/apply-runtime.sh --enable-powertop
+
+(equivalent to `sudo systemctl enable --now mbp51-powertop.service`, but it
+also re-deploys and verifies the zram and sysctl files first — see
+[INSTALL.md](INSTALL.md))
 
 Keep a record of baseline Wi-Fi and USB/suspend behavior before enabling.
 The experimental kernel sets CONFIG_CPU_MITIGATIONS=n by user choice;

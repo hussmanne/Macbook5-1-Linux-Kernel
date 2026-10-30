@@ -22,6 +22,19 @@ for script in install/activate-daily-kernel.sh install/activate-custom-kernel.sh
   grep -q 'grub-probe' "$script"
   ! grep -qE 'linux \$subvol/boot/' "$script"
 done
+# Every runtime/ file must have a deployment site. Before apply-runtime.sh
+# existed, only archiso-install.sh deployed them, and the manual and
+# EndeavourOS paths deployed nothing at all.
+for f in $(cd runtime && find . -type f | sed 's|^\./||'); do
+  grep -q "$f" install/apply-runtime.sh ||
+    { echo "runtime/$f is not deployed by install/apply-runtime.sh" >&2; exit 1; }
+done
+grep -q 'apply-runtime.sh" --root /mnt' install/archiso-install.sh
+grep -q 'apply-runtime.sh" --root /mnt --verify' install/archiso-install.sh
+grep -q 'apply-runtime.sh' docs/INSTALL.md
+# The acceptance gate must name the cause of a missing zram, not just warn.
+grep -q 'run install/apply-runtime.sh' scripts/postboot-check.sh
+grep -q 'page-cluster' scripts/postboot-check.sh
 grep -q -- '--no-wifi' install/activate-daily-kernel.sh
 grep -q -- '--no-wifi' scripts/postboot-check.sh
 bash tools/mbp51-hardware-survey.sh --help >/dev/null
@@ -59,6 +72,7 @@ grep -q 'git apply --check --whitespace=error' scripts/apply-tier-patches.sh
 bash scripts/test-tier-profiles.sh
 bash scripts/test-installer-modes.sh
 bash scripts/test-power-idle.sh
+bash scripts/test-apply-runtime.sh
 grep -q '^ExecStart=/usr/bin/powertop --auto-tune' runtime/systemd/mbp51-powertop.service
 python3 -m py_compile compat/broadcom/patch-broadcom-wl.py
 echo "Static validation passed; compilation not yet proven."
