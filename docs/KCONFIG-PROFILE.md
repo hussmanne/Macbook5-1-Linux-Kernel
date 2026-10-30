@@ -243,7 +243,9 @@ corrupt memory rather than being rejected.
 
 ## 7. Remaining candidates, not removed yet
 
-Listed with the reason they were left alone; none of them is worth a risk:
+Listed with the reason they were left alone; none of them is worth a risk.
+For what cutting does and does not buy — it buys image size, not watts —
+see [POWER-PERF-2026-10-29.md](POWER-PERF-2026-10-29.md) §5.
 
 | Symbol | Why it is still present |
 |---|---|

@@ -142,6 +142,10 @@ yes CPU_IDLE_GOV_TEO
 # 5. Memory: LZ4 zram only. The backend is separate from CRYPTO_LZ4; without
 #    it zram-generator's compression-algorithm=lz4 is rejected at runtime.
 # ---------------------------------------------------------------------------
+# SWAP is what makes zram-generator's LZ4 swap possible at all. It already
+# defaults to y, so this line changes nothing in the built kernel; it exists
+# so the assumption is written down and audit-config.sh can enforce it.
+yes SWAP
 yes ZRAM_BACKEND_LZ4
 yes ZRAM_DEF_COMP_LZ4
 no ZRAM_BACKEND_LZO
