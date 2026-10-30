@@ -98,7 +98,7 @@ boot entries: Daily, BORE, and Extreme Lab. See
 ├── patches/
 │   ├── bore.lock
 │   └── lab.lock
-├── runtime/
+├── runtime/                          # deployed by install/apply-runtime.sh
 │   ├── systemd/mbp51-powertop.service
 │   ├── systemd/zram-generator.conf
 │   ├── system-sleep/50-mbp51-powertop

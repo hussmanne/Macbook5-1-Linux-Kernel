@@ -108,11 +108,21 @@ arch-chroot /mnt grub-install --target=i386-pc --recheck "$disk" ||
 arch-chroot /mnt mkinitcpio -P
 arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
-install -Dm644 "$repo_root/runtime/systemd/zram-generator.conf" /mnt/etc/systemd/zram-generator.conf
-install -Dm644 "$repo_root/runtime/sysctl.d/99-mbp51-memory.conf" /mnt/etc/sysctl.d/99-mbp51-memory.conf
-install -Dm644 "$repo_root/runtime/systemd/mbp51-powertop.service" /mnt/etc/systemd/system/mbp51-powertop.service
-install -Dm755 "$repo_root/runtime/system-sleep/50-mbp51-powertop" /mnt/usr/lib/systemd/system-sleep/50-mbp51-powertop
+# One deployer for every runtime template, shared with the manual and
+# EndeavourOS paths, so a new runtime/ file cannot be added without a
+# deployment site. Best-effort: a missing optional package warns, never aborts
+# the install after partitioning.
+bash "$repo_root/install/apply-runtime.sh" --root /mnt
 arch-chroot /mnt systemctl enable NetworkManager.service lightdm.service bluetooth.service fstrim.timer
+# Verify the memory layer survived the chroot instead of printing PASS blindly.
+bash "$repo_root/install/apply-runtime.sh" --root /mnt --verify >/dev/null || {
+  echo "FAIL: runtime templates missing from the target after deployment" >&2
+  exit 1
+}
+for unit in NetworkManager lightdm bluetooth fstrim.timer; do
+  arch-chroot /mnt systemctl is-enabled "$unit.service" >/dev/null ||
+    { echo "FAIL: $unit.service not enabled" >&2; exit 1; }
+done
 arch-chroot /mnt test -s /boot/vmlinuz-linux-lts
 arch-chroot /mnt test -s /boot/initramfs-linux-lts.img
 arch-chroot /mnt test -s /boot/EFI/BOOT/BOOTX64.EFI

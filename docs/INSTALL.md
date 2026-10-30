@@ -124,11 +124,32 @@ a recovery boot is available**, and repeat the report after resuming.
 Test Wi-Fi reconnect and inspect `journalctl -k -b`. Do not automatically
 disable the discrete NVIDIA GPU or force PCIe ASPM.
 
-Only after the baseline survives these checks, install `powertop` and
-`systemd-zram-generator`, deploy the runtime templates, and enable the
-requested global PowerTOP tuning. The repository preserves that preference
-but does not force it during the first, reversible boot. Compare idle power,
-CPU temperatures, input latency and sleep-drain against the stock kernel.
+Install `systemd-zram-generator` and `powertop`, then deploy the runtime
+templates with the one command that owns them:
+
+```bash
+sudo bash install/apply-runtime.sh                 # deploy
+sudo bash install/apply-runtime.sh --verify        # confirm
+```
+
+That writes the zram config, the memory sysctls and the suspend hook, and
+reports whether `systemd-zram-generator` is actually present — without it the
+config is deployed but inert and the machine has **no swap at all**. On a live
+ISO, point it at the target instead: `--root /mnt`.
+
+The global PowerTOP tuning stays **disabled** by default. The repository
+preserves that preference but does not force it during the first, reversible
+boot. Enable it only after the baseline survives the checks above, and only
+once the machine is on a custom kernel whose power behaviour you have
+measured:
+
+```bash
+sudo bash install/apply-runtime.sh --enable-powertop
+```
+
+`50-mbp51-powertop` gates itself on that unit being enabled, so leaving it off
+also keeps wake-from-suspend untuned. Compare idle power, CPU temperatures,
+input latency and sleep-drain against the stock kernel before enabling.
 
 ## Recovery and security
 
