@@ -135,9 +135,21 @@ done <<<"$plan"
 
 # --- zram generator -------------------------------------------------------
 # Without the package the config is inert and there is no swap at all.
-if [[ -e "$root/usr/lib/systemd/system-generators/zram-generator" ]] ||
-   [[ -e "$root/usr/bin/zramctl" ]] ||
-   command -v zramctl >/dev/null 2>&1; then
+#
+# Probe the TARGET ROOT only. An earlier version also asked the host's PATH
+# via `command -v zramctl`, which made the answer depend on the machine doing
+# the installing: a runner with util-linux but an empty target root reported
+# zram as present and stayed quiet about the machine having no swap at all.
+have_zramgen=0
+for probe in \
+  "$root/usr/lib/systemd/system-generators/zram-generator" \
+  "$root/usr/bin/zramctl" \
+  "$root/usr/sbin/zramctl"; do
+  [[ -e $probe ]] && have_zramgen=1
+done
+# The pacman database is authoritative on Arch when it is readable.
+compgen -G "$root/var/lib/pacman/local/systemd-zram-generator-*" >/dev/null && have_zramgen=1
+if (( have_zramgen )); then
   info "zram-generator present; zram0 will come up at next boot"
 else
   warn "zram-generator does not appear to be installed in $root."

@@ -80,6 +80,20 @@ rc=$?
 grep -qi 'no swap' <<<"$out" &&
   ok "missing zram-generator warns that there will be no swap" || bad "warning not specific"
 
+# 7b. Regression: a zramctl on the *host* PATH must not make the deployer
+# believe the target root has zram-generator. That bug shipped once: local runs
+# passed and CI failed, because the runner had util-linux's zramctl and this
+# sandbox did not.
+r=$(new_root "$work/c")
+rm -rf "$r/usr/lib/systemd/system-generators" "$r/usr/bin"
+mkdir -p "$work/fakebin"
+printf '#!/bin/sh\n' > "$work/fakebin/zramctl"
+chmod +x "$work/fakebin/zramctl"
+out=$(PATH="$work/fakebin:$PATH" bash "$deployer" --root "$r" 2>&1)
+grep -qi 'no swap' <<<"$out" &&
+  ok "host PATH zramctl does not mask a missing target zram-generator" ||
+  bad "deployer trusted the host PATH instead of the target root"
+
 # 8. powertop is deferred unless asked for.
 [[ ! -e "$r/etc/systemd/system/multi-user.target.wants/mbp51-powertop.service" ]] &&
   ok "powertop unit not enabled by default" || bad "powertop unit enabled by default"
