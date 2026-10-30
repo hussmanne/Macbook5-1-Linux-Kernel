@@ -228,21 +228,28 @@ If it says `default` and `powertop` shows PCIe links in `L0` with no `L1`, test
 script measuring. **[estimate]** 0.2–1 W when it works; a dead Wi-Fi card when
 it does not.
 
-### 4.5 Filesystem and swap — real, and free
+### 4.5 Filesystem and swap
 
-Not kernel configuration, but the cheapest wins available:
+**Corrected:** two things this section originally proposed are already the
+installer's defaults. `install/archiso-install.sh` mounts
+`noatime,compress=zstd:1` on `@` and `@home`, so there is nothing to change:
 
-- **[inferred]** `noatime` on `/` (and `/home`). Default is `relatime`; `noatime`
-  removes the metadata write on every read.
+- ~~`noatime`~~ — already set, on every subvolume.
+- ~~`compress=zstd:1`~~ — already set. (The handoff snapshot describes an older
+  install using `zstd:3`; the installer has since moved to `zstd:1`, which is
+  the right call on this CPU.)
+
+What is left:
+
 - **[inferred]** `commit=60` or `commit=120` on Btrfs — fewer periodic
   writeback wakeups, at the cost of a larger window of lost writes on power
-  loss. A laptop that is suspended, not powered off, rarely cares.
-- **[inferred]** `compress=zstd:1` (not `zstd:3`) on Btrfs. On a 2.4 GHz Core 2,
-  `zstd:3` spends real CPU time to save I/O you were not waiting on.
-- **[inferred]** With zram-generator, the standard tuning is
-  `vm.swappiness=100`, `vm.page-cluster=0`, `vm.watermark_boost_factor=0`,
-  `vm.watermark_scale_factor=125`. It keeps more in compressed RAM and touches
-  the disk less.
+  loss. **[estimate]** Marginal once `noatime` and compression are already in
+  place; treat it as untested rather than free.
+- **[inferred]** The zram tuning in `runtime/sysctl.d/99-mbp51-memory.conf` was
+  missing two of its four standard settings;
+  `vm.watermark_boost_factor=0` and `vm.watermark_scale_factor=125` are added
+  by this change. Sizing, the compressor trade-off and the disk-swap
+  constraint list are in [MEMORY-AND-SWAP.md](MEMORY-AND-SWAP.md).
 
 ### 4.6 Wi-Fi power save under `wl`
 

@@ -135,7 +135,10 @@ is not the same as gmux brightness zero.
 
 Choose EndeavourOS LXQt+Openbox X11, Btrfs root @ and @home, Dracut
 and GRUB; retain FAT32 ESP of roughly 1-2 GiB; 4 GiB LZ4 ZRAM in RAM,
-~8 GiB disk swap as lower-priority fallback (not hibernate); no need
+~8 GiB disk swap as lower-priority fallback (not hibernate) — **note that
+nothing in this repository creates that swapfile today**; a clean install from
+`install/archiso-install.sh` produces zram only. See
+[MEMORY-AND-SWAP.md](MEMORY-AND-SWAP.md) §4; no need
 for 4 partitions / OS installations. 223 GiB SSD has ample space for
 all four kernels, initramfs pairs and small snapshots. Enable zstd:1
 as experiment, not proven improvement over current zstd:3; prefer

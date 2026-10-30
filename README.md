@@ -21,7 +21,9 @@ is the only independent fallback on the machine. The tier list, the ABI strings
 and the boot-probability analysis are in
 [docs/REVIEW-2026-10-29.md](docs/REVIEW-2026-10-29.md). Where the battery life
 actually goes, and why almost none of it is a kernel option, is in
-[docs/POWER-PERF-2026-10-29.md](docs/POWER-PERF-2026-10-29.md).
+[docs/POWER-PERF-2026-10-29.md](docs/POWER-PERF-2026-10-29.md); the swap and
+compressed-RAM side of the same question is in
+[docs/MEMORY-AND-SWAP.md](docs/MEMORY-AND-SWAP.md).
 
 Configuration revision `c2` trims what cannot exist on a MacBookPro5,1
 (virtio/9p guest stack, eight unused NICs, PCCARD, NUMA, i915, AGP,

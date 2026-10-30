@@ -33,6 +33,18 @@ source "$PWD/scripts/tier-profile.sh"
 [[ "$MBP51_KERNEL_RELEASE" == "$KERNEL_VERSION$KERNEL_LOCALVERSION" ]]
 grep -q 'no CPU_MITIGATIONS' scripts/configure.sh
 grep -q 'no ZSWAP' scripts/configure.sh
+# Swap and compressed RAM are easy to regress silently: a dropped sysctl or a
+# zram-generator setting that no longer matches the built backend fails at boot
+# with "'lz4' is not a valid compression algorithm" and no other symptom.
+for setting in 'vm.swappiness = 100' 'vm.page-cluster = 0' \
+  'vm.watermark_boost_factor = 0' 'vm.watermark_scale_factor = 125'; do
+  grep -qxF "$setting" runtime/sysctl.d/99-mbp51-memory.conf
+done
+grep -qxF 'compression-algorithm = lz4' runtime/systemd/zram-generator.conf
+grep -qxF 'swap-priority = 100' runtime/systemd/zram-generator.conf
+grep -q 'zram-size = min(ram / 2, 4096)' runtime/systemd/zram-generator.conf
+grep -q 'ZRAM_BACKEND_LZ4' scripts/configure.sh
+grep -q 'ZRAM_BACKEND_LZ4' scripts/audit-config.sh
 grep -q 'CPU_MITIGATIONS' scripts/audit-config.sh
 for feature in USER_NS MEMCG PSI SWAP BTRFS_FS_POSIX_ACL SND_HDA_CODEC_REALTEK ACPI_SBS; do
   grep -q "$feature" scripts/configure.sh
